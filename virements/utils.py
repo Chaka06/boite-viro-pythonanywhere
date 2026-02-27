@@ -114,11 +114,12 @@ def create_generic_logo(logo_path, banque_code):
         
         # Ajouter du texte (initiales de la banque)
         try:
-            # Essayer de charger une police système
-            font = ImageFont.truetype("/System/Library/Fonts/Arial.ttf", 24)
+            # Linux (PythonAnywhere, Ubuntu/Debian)
+            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 24)
         except:
             try:
-                font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 24)
+                # macOS (développement local)
+                font = ImageFont.truetype("/System/Library/Fonts/Arial.ttf", 24)
             except:
                 font = ImageFont.load_default()
         

@@ -101,8 +101,15 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Configuration WhiteNoise pour la production
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# Configuration WhiteNoise pour la production (Django 4.2+ : STORAGES remplace STATICFILES_STORAGE)
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Media files (PDFs générés)
 MEDIA_URL = "/media/"
@@ -139,8 +146,8 @@ LOGIN_URL = "/accounts/login/"
 
 # Sécurité HTTPS en production
 if not DEBUG:
-    # Force HTTPS
-    SECURE_SSL_REDIRECT = True
+    # Force HTTPS — mettre False sur PythonAnywhere (géré par leur proxy)
+    SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=False, cast=bool)
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
     # HSTS (HTTP Strict Transport Security)
