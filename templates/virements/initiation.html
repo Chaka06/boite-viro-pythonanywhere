@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Nouveau virement - BOITE-VIRO{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 text-primary">
+                    <i class="fas fa-paper-plane me-2"></i>Nouveau virement
+                </h1>
+                <p class="text-muted">Quota restant : {{ quota_restant }} virement(s)</p>
+            </div>
+            <a href="{% url 'virements:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-edit me-2"></i>Formulaire d'initiation de virement
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="initiationForm">
+                    {% csrf_token %}
+                    
+                    <!-- Informations du bénéficiaire -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2">
+                                <i class="fas fa-user me-2"></i>Informations du bénéficiaire
+                            </h6>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.beneficiaire_nom }}
+                                <label for="{{ form.beneficiaire_nom.id_for_label }}">{{ form.beneficiaire_nom.label }}</label>
+                            </div>
+                            {% if form.beneficiaire_nom.errors %}
+                                <div class="text-danger small">{{ form.beneficiaire_nom.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.beneficiaire_prenom }}
+                                <label for="{{ form.beneficiaire_prenom.id_for_label }}">{{ form.beneficiaire_prenom.label }}</label>
+                            </div>
+                            {% if form.beneficiaire_prenom.errors %}
+                                <div class="text-danger small">{{ form.beneficiaire_prenom.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.beneficiaire_email }}
+                                <label for="{{ form.beneficiaire_email.id_for_label }}">{{ form.beneficiaire_email.label }}</label>
+                            </div>
+                            {% if form.beneficiaire_email.errors %}
+                                <div class="text-danger small">{{ form.beneficiaire_email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.numero_bic }}
+                                <label for="{{ form.numero_bic.id_for_label }}">{{ form.numero_bic.label }}</label>
+                            </div>
+                            {% if form.numero_bic.errors %}
+                                <div class="text-danger small">{{ form.numero_bic.errors.0 }}</div>
+                            {% endif %}
+                            {% if form.numero_bic.help_text %}
+                                <div class="form-text">{{ form.numero_bic.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="form-floating">
+                                {{ form.beneficiaire_compte }}
+                                <label for="{{ form.beneficiaire_compte.id_for_label }}">{{ form.beneficiaire_compte.label }}</label>
+                            </div>
+                            {% if form.beneficiaire_compte.errors %}
+                                <div class="text-danger small">{{ form.beneficiaire_compte.errors.0 }}</div>
+                            {% endif %}
+                            {% if form.beneficiaire_compte.help_text %}
+                                <div class="form-text">{{ form.beneficiaire_compte.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Informations du donneur d'ordre -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2">
+                                <i class="fas fa-user-tie me-2"></i>Informations du donneur d'ordre
+                            </h6>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.donneur_ordre_nom }}
+                                <label for="{{ form.donneur_ordre_nom.id_for_label }}">{{ form.donneur_ordre_nom.label }}</label>
+                            </div>
+                            {% if form.donneur_ordre_nom.errors %}
+                                <div class="text-danger small">{{ form.donneur_ordre_nom.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.donneur_ordre_prenom }}
+                                <label for="{{ form.donneur_ordre_prenom.id_for_label }}">{{ form.donneur_ordre_prenom.label }}</label>
+                            </div>
+                            {% if form.donneur_ordre_prenom.errors %}
+                                <div class="text-danger small">{{ form.donneur_ordre_prenom.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="form-floating">
+                                {{ form.donneur_ordre_compte }}
+                                <label for="{{ form.donneur_ordre_compte.id_for_label }}">{{ form.donneur_ordre_compte.label }}</label>
+                            </div>
+                            {% if form.donneur_ordre_compte.errors %}
+                                <div class="text-danger small">{{ form.donneur_ordre_compte.errors.0 }}</div>
+                            {% endif %}
+                            {% if form.donneur_ordre_compte.help_text %}
+                                <div class="form-text">{{ form.donneur_ordre_compte.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Informations du virement -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2">
+                                <i class="fas fa-money-bill-wave me-2"></i>Informations du virement
+                            </h6>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.montant }}
+                                <label for="{{ form.montant.id_for_label }}">{{ form.montant.label }}</label>
+                            </div>
+                            {% if form.montant.errors %}
+                                <div class="text-danger small">{{ form.montant.errors.0 }}</div>
+                            {% endif %}
+                            {% if form.montant.help_text %}
+                                <div class="form-text">{{ form.montant.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.devise }}
+                                <label for="{{ form.devise.id_for_label }}">{{ form.devise.label }}</label>
+                            </div>
+                            {% if form.devise.errors %}
+                                <div class="text-danger small">{{ form.devise.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.langue }}
+                                <label for="{{ form.langue.id_for_label }}">{{ form.langue.label }}</label>
+                            </div>
+                            {% if form.langue.errors %}
+                                <div class="text-danger small">{{ form.langue.errors.0 }}</div>
+                            {% endif %}
+                            {% if form.langue.help_text %}
+                                <div class="form-text">{{ form.langue.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.banque_emettrice }}
+                                <label for="{{ form.banque_emettrice.id_for_label }}">{{ form.banque_emettrice.label }}</label>
+                            </div>
+                            {% if form.banque_emettrice.errors %}
+                                <div class="text-danger small">{{ form.banque_emettrice.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Erreurs non-field -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <!-- Boutons -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="{% url 'virements:dashboard' %}" class="btn btn-outline-secondary me-md-2">
+                                    <i class="fas fa-times me-2"></i>Annuler
+                                </a>
+                                <button type="submit" class="btn btn-virement">
+                                    <i class="fas fa-paper-plane me-2"></i>Initier le virement
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Validation côté client
+    const form = document.getElementById('initiationForm');
+    
+    form.addEventListener('submit', function(e) {
+        // Validation basique
+        const requiredFields = form.querySelectorAll('[required]');
+        let isValid = true;
+        
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                isValid = false;
+                field.classList.add('is-invalid');
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Veuillez remplir tous les champs obligatoires.');
+        }
+    });
+});
+</script>
+{% endblock %}

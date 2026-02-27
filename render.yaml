@@ -1,0 +1,47 @@
+services:
+  # Service Web Django
+  - type: web
+    name: boite-viro
+    env: python
+    plan: starter
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn boite_viro.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: ALLOWED_HOSTS
+        value: your-app-name.onrender.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: boite-viro-db
+          property: connectionString
+      - key: EMAIL_HOST
+        value: mail.virement.net
+      - key: EMAIL_PORT
+        value: 587
+      - key: EMAIL_USE_TLS
+        value: True
+      - key: EMAIL_USE_SSL
+        value: False
+      - key: EMAIL_HOST_USER
+        value: support@virement.net
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        value: support@virement.net
+      - key: SERVER_EMAIL
+        value: support@virement.net
+      - key: ADMIN_EMAIL
+        value: support@virement.net
+
+databases:
+  # Base de données PostgreSQL
+  - name: boite-viro-db
+    plan: starter
+    databaseName: boite_viro
+    user: boite_viro_user
+

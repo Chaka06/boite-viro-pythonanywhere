@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mon profil - BOITE-VIRO{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 text-primary">
+                    <i class="fas fa-user-cog me-2"></i>Mon profil
+                </h1>
+                <p class="text-muted">Gérez vos informations personnelles</p>
+            </div>
+            <a href="{% url 'virements:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Informations du compte -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Informations du compte
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-sm-4"><strong>Nom d'utilisateur :</strong></div>
+                    <div class="col-sm-8">{{ user.username }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4"><strong>Email :</strong></div>
+                    <div class="col-sm-8">{{ user.email|default:"Non renseigné" }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4"><strong>Nom complet :</strong></div>
+                    <div class="col-sm-8">{{ user.get_full_name|default:"Non renseigné" }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4"><strong>Type de compte :</strong></div>
+                    <div class="col-sm-8">
+                        <span class="badge {% if profil.type_compte == 'premium' %}bg-warning{% else %}bg-info{% endif %}">
+                            {{ profil.get_type_compte_display }}
+                        </span>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4"><strong>Membre depuis :</strong></div>
+                    <div class="col-sm-8">{{ profil.date_creation|date:"d/m/Y" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quota et statistiques -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Quota et statistiques
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-sm-6"><strong>Quota utilisé :</strong></div>
+                    <div class="col-sm-6">{{ profil.quota_utilise }} / {{ profil.quota_maximum }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <div class="quota-indicator">
+                            <div class="quota-bar" style="width: {{ profil.pourcentage_utilise }}%"></div>
+                        </div>
+                        <small class="text-muted">{{ profil.pourcentage_utilise|floatformat:1 }}% utilisé</small>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-6"><strong>Virements restants :</strong></div>
+                    <div class="col-sm-6">
+                        <span class="{% if profil.quota_restant <= 5 %}text-danger{% elif profil.quota_restant <= 10 %}text-warning{% else %}text-success{% endif %}">
+                            {{ profil.quota_restant }}
+                        </span>
+                    </div>
+                </div>
+                {% if profil.quota_epuise %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Quota épuisé !</strong><br>
+                    Contactez l'administrateur via WhatsApp : 
+                    <a href="https://wa.me/2250504001272" target="_blank" class="alert-link">+225 05 04 00 12 72</a>
+                </div>
+                {% elif profil.quota_restant <= 5 %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Attention !</strong> Il ne vous reste que {{ profil.quota_restant }} virement(s).
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modification du mot de passe -->
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-key me-2"></i>Changer le mot de passe
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="form-floating">
+                                {{ form.old_password }}
+                                <label for="{{ form.old_password.id_for_label }}">{{ form.old_password.label }}</label>
+                            </div>
+                            {% if form.old_password.errors %}
+                                <div class="text-danger small">{{ form.old_password.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.new_password1 }}
+                                <label for="{{ form.new_password1.id_for_label }}">{{ form.new_password1.label }}</label>
+                            </div>
+                            {% if form.new_password1.errors %}
+                                <div class="text-danger small">{{ form.new_password1.errors.0 }}</div>
+                            {% endif %}
+                            {% if form.new_password1.help_text %}
+                                <div class="form-text">{{ form.new_password1.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.new_password2 }}
+                                <label for="{{ form.new_password2.id_for_label }}">{{ form.new_password2.label }}</label>
+                            </div>
+                            {% if form.new_password2.errors %}
+                                <div class="text-danger small">{{ form.new_password2.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Erreurs non-field -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="button" class="btn btn-outline-secondary me-md-2" onclick="document.querySelector('form').reset()">
+                            <i class="fas fa-undo me-2"></i>Réinitialiser
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Modifier le mot de passe
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Validation côté client pour le formulaire de mot de passe
+    const form = document.querySelector('form');
+    const newPassword1 = document.getElementById('{{ form.new_password1.id_for_label }}');
+    const newPassword2 = document.getElementById('{{ form.new_password2.id_for_label }}');
+    
+    function validatePasswords() {
+        if (newPassword1.value !== newPassword2.value) {
+            newPassword2.setCustomValidity('Les mots de passe ne correspondent pas');
+        } else {
+            newPassword2.setCustomValidity('');
+        }
+    }
+    
+    newPassword1.addEventListener('input', validatePasswords);
+    newPassword2.addEventListener('input', validatePasswords);
+    
+    form.addEventListener('submit', function(e) {
+        validatePasswords();
+        if (!form.checkValidity()) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

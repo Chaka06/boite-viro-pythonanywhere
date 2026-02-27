@@ -1,0 +1,76 @@
+/* Styles personnalisés pour BOITE-VIRO */
+
+.card-stats {
+    border-left: 4px solid #0d6efd;
+}
+
+.card-stats.warning {
+    border-left-color: #ffc107;
+}
+
+.card-stats.danger {
+    border-left-color: #dc3545;
+}
+
+.card-stats.success {
+    border-left-color: #198754;
+}
+
+.form-floating > .form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.btn-virement {
+    background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
+    border: none;
+    padding: 12px 30px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.btn-virement:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(13, 110, 253, 0.3);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.quota-indicator {
+    position: relative;
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.quota-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #198754 0%, #ffc107 70%, #dc3545 90%);
+    transition: width 0.3s ease;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .btn-virement {
+        padding: 10px 20px;
+        font-size: 0.875rem;
+    }
+}

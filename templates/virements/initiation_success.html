@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Virement initié - BOITE-VIRO{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-success shadow">
+            <div class="card-header bg-success text-white text-center">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-check-circle me-2"></i>Virement initié avec succès
+                </h4>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-check-circle fa-5x text-success mb-3"></i>
+                    <h5>Votre virement a été initié avec succès</h5>
+                    <p class="text-muted">Un email de confirmation va être envoyé au bénéficiaire.</p>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6 mx-auto">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">Détails du virement</h6>
+                                <p><strong>Numéro :</strong> {{ virement.id|slice:":8" }}</p>
+                                <p><strong>Bénéficiaire :</strong> {{ virement.beneficiaire_nom_complet }}</p>
+                                <p><strong>Montant :</strong> {{ virement.montant_formate }}</p>
+                                <p><strong>Date :</strong> {{ virement.date_creation|date:"d/m/Y H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    {% if virement.pdf_initiation %}
+                    <a href="{% url 'virements:download_pdf' virement.id %}" class="btn btn-outline-primary me-md-2">
+                        <i class="fas fa-download me-2"></i>Télécharger le PDF
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'virements:initiation' %}" class="btn btn-success me-md-2">
+                        <i class="fas fa-plus me-2"></i>Nouveau virement
+                    </a>
+                    <a href="{% url 'virements:dashboard' %}" class="btn btn-primary">
+                        <i class="fas fa-home me-2"></i>Tableau de bord
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

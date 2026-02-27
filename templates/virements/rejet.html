@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Rejeter le virement - BOITE-VIRO{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 text-warning">
+                    <i class="fas fa-times-circle me-2"></i>Rejeter le virement
+                </h1>
+                <p class="text-muted">Virement #{{ virement.id|slice:":8" }}</p>
+            </div>
+            <a href="{% url 'virements:historique' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <!-- Informations du virement -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Informations du virement à rejeter
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Bénéficiaire :</strong> {{ virement.beneficiaire_nom_complet }}</p>
+                        <p><strong>Email :</strong> {{ virement.beneficiaire_email }}</p>
+                        <p><strong>Compte :</strong> {{ virement.beneficiaire_compte }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Montant :</strong> {{ virement.montant_formate }}</p>
+                        <p><strong>Banque :</strong> {{ virement.get_banque_emettrice_display }}</p>
+                        <p><strong>Date d'initiation :</strong> {{ virement.date_creation|date:"d/m/Y H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulaire de rejet -->
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-edit me-2"></i>Formulaire de rejet
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="rejetForm">
+                    {% csrf_token %}
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.frais_redirection }}
+                                <label for="{{ form.frais_redirection.id_for_label }}">{{ form.frais_redirection.label }}</label>
+                            </div>
+                            {% if form.frais_redirection.errors %}
+                                <div class="text-danger small">{{ form.frais_redirection.errors.0 }}</div>
+                            {% endif %}
+                            {% if form.frais_redirection.help_text %}
+                                <div class="form-text">{{ form.frais_redirection.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" value="{{ virement.devise }}" readonly>
+                                <label>Devise des frais</label>
+                            </div>
+                            <div class="form-text">Les frais seront dans la même devise que le virement</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="form-floating">
+                                {{ form.motif_rejet }}
+                                <label for="{{ form.motif_rejet.id_for_label }}">{{ form.motif_rejet.label }}</label>
+                            </div>
+                            {% if form.motif_rejet.errors %}
+                                <div class="text-danger small">{{ form.motif_rejet.errors.0 }}</div>
+                            {% endif %}
+                            {% if form.motif_rejet.help_text %}
+                                <div class="form-text">{{ form.motif_rejet.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Erreurs non-field -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <!-- Avertissement -->
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Attention :</strong> Cette action est irréversible. Le bénéficiaire recevra un email de notification du rejet avec les frais de redirection.
+                   </div>
+
+                   <!-- Boutons -->
+                   <div class="row">
+                       <div class="col-12">
+                           <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                               <a href="{% url 'virements:historique' %}" class="btn btn-outline-secondary me-md-2">
+                                   <i class="fas fa-times me-2"></i>Annuler
+                               </a>
+                               <button type="submit" class="btn btn-warning">
+                                   <i class="fas fa-times-circle me-2"></i>Confirmer le rejet
+                               </button>
+                           </div>
+                       </div>
+                   </div>
+               </form>
+           </div>
+       </div>
+   </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+   const form = document.getElementById('rejetForm');
+   
+   form.addEventListener('submit', function(e) {
+       const motif = document.getElementById('{{ form.motif_rejet.id_for_label }}').value.trim();
+       const frais = document.getElementById('{{ form.frais_redirection.id_for_label }}').value;
+       
+       if (!motif || motif.length < 10) {
+           e.preventDefault();
+           alert('Le motif du rejet doit contenir au moins 10 caractères.');
+           return;
+       }
+       
+       if (!frais || parseFloat(frais) < 0) {
+           e.preventDefault();
+           alert('Veuillez saisir un montant de frais valide.');
+           return;
+       }
+       
+       if (!confirm('Êtes-vous sûr de vouloir rejeter ce virement ? Cette action est irréversible.')) {
+           e.preventDefault();
+       }
+   });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Virement rejeté - BOITE-VIRO{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-warning shadow">
+            <div class="card-header bg-warning text-dark text-center">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-times-circle me-2"></i>Virement rejeté avec succès
+                </h4>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-times-circle fa-5x text-warning mb-3"></i>
+                    <h5>Le virement a été rejeté avec succès</h5>
+                    <p class="text-muted">Un email de notification va être envoyé au bénéficiaire.</p>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-8 mx-auto">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">Détails du rejet</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Numéro :</strong> {{ virement.id|slice:":8" }}</p>
+                                        <p><strong>Bénéficiaire :</strong> {{ virement.beneficiaire_nom_complet }}</p>
+                                        <p><strong>Montant initial :</strong> {{ virement.montant_formate }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Frais de redirection :</strong> {{ rejet.frais_formates }}</p>
+                                        <p><strong>Date de rejet :</strong> {{ rejet.date_rejet|date:"d/m/Y H:i" }}</p>
+                                        <p><strong>Statut :</strong> <span class="badge bg-warning">Rejeté</span></p>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <p><strong>Motif :</strong></p>
+                                    <p class="text-muted">{{ rejet.motif_rejet }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    {% if rejet.pdf_rejet %}
+                    <a href="{% url 'virements:download_pdf' virement.id %}?type=rejet" class="btn btn-outline-primary me-md-2">
+                        <i class="fas fa-download me-2"></i>Télécharger le PDF
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'virements:historique' %}" class="btn btn-warning me-md-2">
+                        <i class="fas fa-history me-2"></i>Voir l'historique
+                    </a>
+                    <a href="{% url 'virements:dashboard' %}" class="btn btn-primary">
+                        <i class="fas fa-home me-2"></i>Tableau de bord
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

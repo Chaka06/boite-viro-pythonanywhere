@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="{{ virement.langue }}" dir="{% if virement.langue == 'ar' %}rtl{% else %}ltr{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t.subject_initiation }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f4f4f4;
+            padding: 0;
+            margin: 0;
+            line-height: 1.6;
+            color: #333333;
+        }
+        .email-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        .header {
+            background-color: {{ bank_info.primary_color }};
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logo {
+            width: 60px !important;
+            height: 60px !important;
+            max-width: 60px !important;
+            max-height: 60px !important;
+            object-fit: contain !important;
+            display: block !important;
+            border: 0 !important;
+            outline: none !important;
+        }
+        .bank-name {
+            color: {{ bank_info.text_color }};
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .bank-slogan {
+            color: {{ bank_info.text_color }};
+            font-size: 11px;
+            margin-top: 3px;
+            opacity: 0.9;
+        }
+        .security-bar {
+            background-color: #e9ecef;
+            padding: 10px 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #666666;
+        }
+        .security-icon {
+            width: 16px;
+            height: 16px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: {{ bank_info.primary_color }};
+            margin-bottom: 8px;
+        }
+        .reference {
+            font-size: 14px;
+            color: #333333;
+            margin-bottom: 20px;
+        }
+        .greeting {
+            font-size: 14px;
+            color: #333333;
+            margin-bottom: 15px;
+        }
+        .main-text {
+            font-size: 14px;
+            color: #333333;
+            margin-bottom: 25px;
+            line-height: 1.8;
+        }
+        .amount-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            margin: 25px 0;
+            border-left: 4px solid {{ bank_info.primary_color }};
+        }
+        .amount-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #666666;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        .amount-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333333;
+        }
+        .details-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: {{ bank_info.primary_color }};
+            margin: 25px 0 15px 0;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+        }
+        .details-table td {
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+        }
+        .details-table td:first-child {
+            font-weight: bold;
+            color: #666666;
+            width: 40%;
+        }
+        .details-table td:last-child {
+            color: #333333;
+        }
+        .status-badge {
+            display: inline-block;
+            background-color: {{ bank_info.primary_color }};
+            color: {{ bank_info.text_color }};
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .security-box {
+            background-color: #f0f8f0;
+            border: 1px solid {{ bank_info.primary_color }};
+            border-left: 4px solid {{ bank_info.primary_color }};
+            padding: 15px;
+            margin: 25px 0;
+        }
+        .security-box-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .security-box-text {
+            font-size: 13px;
+            color: #333333;
+            line-height: 1.7;
+            margin-bottom: 8px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 11px;
+            color: #999999;
+            line-height: 1.6;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 20px;
+            }
+            .header {
+                padding: 15px 20px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .title {
+                font-size: 20px;
+            }
+            .amount-value {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <!-- Header avec logo et nom de la banque -->
+        <div class="header">
+            <div class="header-left">
+                <img src="{{ bank_info.logo_url }}" alt="{{ bank_info.name }}" class="logo" style="display: block; width: 60px; height: 60px; object-fit: contain; border: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic;" width="60" height="60" />
+                <div>
+                    <h1 class="bank-name">{{ bank_info.name }}</h1>
+                    <p class="bank-slogan">{{ bank_info.slogan }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bandeau de sécurité -->
+        <div class="security-bar">
+            <svg class="security-icon" viewBox="0 0 24 24" fill="#FFD700">
+                <path d="M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10A2,2 0 0,1 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"/>
+            </svg>
+            <span>{{ t.securite_msg }}</span>
+        </div>
+        
+        <!-- Contenu principal -->
+        <div class="content">
+            <!-- Titre et référence -->
+            <h2 class="title">{{ t.titre_principal_initiation }}</h2>
+            <p class="reference">{{ bank_info.name }}-TRF_{{ numero_virement }}.{{ virement.date_creation|date:"Y" }}</p>
+            
+            <!-- Salutation et message principal -->
+            <p class="greeting">{{ t.salutation }} {{ virement.beneficiaire_nom }},</p>
+            <p class="main-text">{{ t.message_principal_initiation }}</p>
+            
+            <!-- Montant du virement -->
+            <div class="amount-section">
+                <div class="amount-label">{{ t.montant_label }}</div>
+                <div class="amount-value">{{ virement.montant|floatformat:2 }} {{ virement.devise }}</div>
+            </div>
+            
+            <!-- Détails de la transaction -->
+            <h3 class="details-title">{{ t.details_operation }}</h3>
+            <table class="details-table">
+                <tr>
+                    <td>{{ t.beneficiaire_label }} (IBAN):</td>
+                    <td>{{ virement.beneficiaire_compte }}</td>
+                </tr>
+                <tr>
+                    <td>{{ t.donneur_ordre_label }}:</td>
+                    <td>{{ virement.donneur_ordre_nom_complet }}</td>
+                </tr>
+                <tr>
+                    <td>{{ t.date_label }}:</td>
+                    <td>{{ virement.date_creation|date:"d/m/Y H:i" }}</td>
+                </tr>
+                <tr>
+                    <td>{{ t.statut_label }}:</td>
+                    <td><span class="status-badge">{{ t.statut_traitement }}</span></td>
+                </tr>
+            </table>
+            
+            <!-- Informations de sécurité -->
+            <div class="security-box">
+                <div class="security-box-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFD700">
+                        <path d="M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10A2,2 0 0,1 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"/>
+                    </svg>
+                    {{ t.info_importante }}
+                </div>
+                <p class="security-box-text">{{ t.message_info }}</p>
+                <p class="security-box-text">
+                    <strong>{{ t.temps_traitement_label }}:</strong> {{ t.temps_traitement }}
+                </p>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>{{ t.message_automatique }}</p>
+            <p>{{ t.droits_reserves }} © {{ virement.date_creation|date:"Y" }} {{ bank_info.name }}</p>
+            <p>{{ t.footer_msg }}</p>
+        </div>
+    </div>
+</body>
+</html>
