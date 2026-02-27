@@ -17,6 +17,13 @@ DEBUG = config("DEBUG", default=True, cast=bool)
 # Hosts autorisés - dynamique selon l'environnement
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
 
+# Origines de confiance pour CSRF (obligatoire Django 4.0+ derrière proxy/HTTPS)
+CSRF_TRUSTED_ORIGINS = config(
+    "CSRF_TRUSTED_ORIGINS",
+    default="http://localhost",
+    cast=Csv()
+)
+
 # Application definition
 INSTALLED_APPS = [
     "django.contrib.admin",
