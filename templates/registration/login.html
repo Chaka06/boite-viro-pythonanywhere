@@ -34,7 +34,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* ═══════════════════════ LEFT PANEL — IMAGE ═══════════════════════ */
+        /* ═══════════════════════ LEFT PANEL ═══════════════════════ */
         .panel-left {
             width: 44%;
             min-height: 100vh;
@@ -43,11 +43,10 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-end;
-            padding: 2.5rem 2rem;
+            padding: 0 2rem 2.5rem;
             overflow: hidden;
         }
 
-        /* Photo de fond */
         .panel-left::before {
             content: '';
             position: absolute;
@@ -58,16 +57,15 @@
             z-index: 0;
         }
 
-        /* Dégradé sombre en bas pour lisibilité du texte */
         .panel-left::after {
             content: '';
             position: absolute;
             inset: 0;
             background: linear-gradient(
                 to bottom,
-                rgba(0,0,0,0.10) 0%,
-                rgba(0,0,0,0.20) 40%,
-                rgba(10,25,60,0.82) 100%
+                rgba(0,0,0,0.05) 0%,
+                rgba(0,0,0,0.15) 40%,
+                rgba(8,20,55,0.88) 100%
             );
             z-index: 1;
         }
@@ -79,28 +77,12 @@
             text-align: center;
         }
 
-        .brand-logo {
-            width: 62px;
-            height: 62px;
-            background: #f5c518;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 0.9rem;
-        }
-
-        .brand-logo i {
-            font-size: 1.5rem;
-            color: #0d2b5e;
-        }
-
         .brand-name {
-            font-size: 1.7rem;
+            font-size: 1.8rem;
             font-weight: 800;
             color: #ffffff;
             letter-spacing: 4px;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
 
         .yellow-bar {
@@ -112,48 +94,34 @@
         }
 
         .brand-desc {
-            color: rgba(255,255,255,0.75);
+            color: rgba(255,255,255,0.65);
             font-size: 0.8rem;
-            line-height: 1.6;
-            margin-bottom: 1.8rem;
+            line-height: 1.7;
+            margin-bottom: 2rem;
             text-shadow: 0 1px 4px rgba(0,0,0,0.4);
         }
 
-        /* ─── Bank logos ─── */
-        .banks-title {
-            color: rgba(255,255,255,0.5);
-            font-size: 0.65rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-bottom: 0.7rem;
-        }
-
+        /* ─── Logos ─── */
         .banks-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.45rem;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
             width: 100%;
+            align-items: center;
         }
 
         .bank-item {
-            background: rgba(255,255,255,0.92);
-            border-radius: 7px;
-            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0 0.5rem;
-            transition: background 0.2s;
-        }
-
-        .bank-item:hover {
-            background: #ffffff;
+            height: 36px;
         }
 
         .bank-item img {
             max-width: 100%;
-            max-height: 22px;
+            max-height: 30px;
             object-fit: contain;
+            filter: drop-shadow(0 1px 4px rgba(0,0,0,0.5));
         }
 
         /* ═══════════════════════ RIGHT PANEL ═══════════════════════ */
@@ -171,6 +139,25 @@
         .form-wrap {
             max-width: 380px;
             width: 100%;
+        }
+
+        /* Titre BOITE-VIRO visible uniquement sur mobile (avant Bienvenue) */
+        .mobile-brand {
+            display: none;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #0d2b5e;
+            letter-spacing: 3px;
+            margin-bottom: 0.3rem;
+        }
+
+        .mobile-bar {
+            display: none;
+            width: 28px;
+            height: 3px;
+            background: #f5c518;
+            border-radius: 2px;
+            margin-bottom: 1rem;
         }
 
         .login-title {
@@ -301,28 +288,25 @@
         @media (max-width: 768px) {
             body { flex-direction: column; }
 
-            /* Sur mobile : panel gauche en bannière compacte */
             .panel-left {
                 width: 100%;
-                min-height: 200px;
-                max-height: 220px;
-                padding: 1.5rem 1.2rem;
+                min-height: 180px;
+                max-height: 200px;
+                padding: 0 1.2rem 1.5rem;
                 justify-content: flex-end;
             }
 
-            .brand-logo { width: 50px; height: 50px; margin-bottom: 0.6rem; }
-            .brand-logo i { font-size: 1.2rem; }
-            .brand-name { font-size: 1.3rem; letter-spacing: 3px; }
-            .yellow-bar { margin: 0.5rem auto 0.5rem; }
+            .brand-name { font-size: 1.3rem; }
             .brand-desc { display: none; }
+            .yellow-bar { margin: 0.5rem auto 1rem; }
 
             .banks-grid {
-                grid-template-columns: repeat(6, 1fr);
-                gap: 0.3rem;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 0.6rem;
             }
 
-            .bank-item { height: 32px; }
-            .bank-item img { max-height: 16px; }
+            .bank-item { height: 28px; }
+            .bank-item img { max-height: 22px; }
 
             .panel-right {
                 width: 100%;
@@ -331,6 +315,10 @@
             }
 
             .form-wrap { max-width: 100%; }
+
+            /* Afficher BOITE-VIRO avant Bienvenue sur mobile */
+            .mobile-brand { display: block; }
+            .mobile-bar { display: block; }
         }
     </style>
 </head>
@@ -339,34 +327,22 @@
     <!-- ═══════════════════════ LEFT PANEL ═══════════════════════ -->
     <div class="panel-left">
         <div class="panel-left-content">
-            <div class="brand-logo">
-                <i class="fas fa-university"></i>
-            </div>
             <div class="brand-name">BOITE‑VIRO</div>
             <div class="yellow-bar"></div>
-            <p class="brand-desc">
-                Gestion des virements bancaires internationaux
-            </p>
+            <p class="brand-desc">Gestion des virements bancaires internationaux</p>
 
-            <div class="banks-title">Établissements partenaires</div>
             <div class="banks-grid">
                 <div class="bank-item">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/BNP_Paribas_logo.svg/320px-BNP_Paribas_logo.svg.png" alt="BNP Paribas">
+                    <img src="https://cdn.worldvectorlogo.com/logos/societe-generale-2.svg" alt="Société Générale">
                 </div>
                 <div class="bank-item">
-                    <img src="https://upload.wikimedia.org/wikipedia/fr/thumb/0/0e/Cr%C3%A9dit_Agricole_logo.svg/320px-Cr%C3%A9dit_Agricole_logo.svg.png" alt="Crédit Agricole">
+                    <img src="https://stock.wikimini.org/w/images/7/7d/Logo_BNP_Paribas.png" alt="BNP Paribas">
                 </div>
                 <div class="bank-item">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Soci%C3%A9t%C3%A9_G%C3%A9n%C3%A9rale_logo.svg/320px-Soci%C3%A9t%C3%A9_G%C3%A9n%C3%A9rale_logo.svg.png" alt="Société Générale">
+                    <img src="https://storage.googleapis.com/endurance-apps-liip/media/cache/bpce_no_filter_grid_fs/5bb4d6e78d543f32117c513a" alt="BPCE">
                 </div>
                 <div class="bank-item">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/HSBC_logo_%282018%29.svg/320px-HSBC_logo_%282018%29.svg.png" alt="HSBC">
-                </div>
-                <div class="bank-item">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Deutsche_Bank_logo.svg/320px-Deutsche_Bank_logo.svg.png" alt="Deutsche Bank">
-                </div>
-                <div class="bank-item">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/ING_Group_logo.svg/320px-ING_Group_logo.svg.png" alt="ING Bank">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Logo_CaixaBank.svg/3840px-Logo_CaixaBank.svg.png" alt="CaixaBank">
                 </div>
             </div>
         </div>
@@ -375,6 +351,11 @@
     <!-- ═══════════════════════ RIGHT PANEL ═══════════════════════ -->
     <div class="panel-right">
         <div class="form-wrap">
+
+            <!-- Visible uniquement sur mobile -->
+            <div class="mobile-brand">BOITE‑VIRO</div>
+            <div class="mobile-bar"></div>
+
             <div class="login-title">Bienvenue</div>
             <div class="login-sub">Connectez-vous à votre espace sécurisé</div>
 
