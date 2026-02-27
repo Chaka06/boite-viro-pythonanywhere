@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion — BOITE-VIRO</title>
 
-    <!-- SEO & Open Graph (image partagée sur réseaux sociaux) -->
+    <!-- SEO & Open Graph -->
     <meta name="description" content="Plateforme professionnelle de gestion des virements bancaires internationaux.">
     <meta property="og:title" content="BOITE-VIRO — Gestion de virements bancaires">
     <meta property="og:description" content="Plateforme professionnelle de gestion des virements bancaires internationaux.">
@@ -34,79 +34,111 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* ═══════════════════════ LEFT PANEL ═══════════════════════ */
+        /* ═══════════════════════ LEFT PANEL — IMAGE ═══════════════════════ */
         .panel-left {
             width: 44%;
-            background: #0d2b5e;
             min-height: 100vh;
+            position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 3rem 2.5rem;
+            justify-content: flex-end;
+            padding: 2.5rem 2rem;
+            overflow: hidden;
+        }
+
+        /* Photo de fond */
+        .panel-left::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url('https://www.ifc.org/content/dam/ifc/photos/2024/am2024-banner-fr.jpg');
+            background-size: cover;
+            background-position: center top;
+            z-index: 0;
+        }
+
+        /* Dégradé sombre en bas pour lisibilité du texte */
+        .panel-left::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(0,0,0,0.10) 0%,
+                rgba(0,0,0,0.20) 40%,
+                rgba(10,25,60,0.82) 100%
+            );
+            z-index: 1;
+        }
+
+        .panel-left-content {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            text-align: center;
         }
 
         .brand-logo {
-            width: 72px;
-            height: 72px;
+            width: 62px;
+            height: 62px;
             background: #f5c518;
             border-radius: 50%;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 1.2rem;
+            margin-bottom: 0.9rem;
         }
 
         .brand-logo i {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             color: #0d2b5e;
         }
 
         .brand-name {
-            font-size: 1.9rem;
+            font-size: 1.7rem;
             font-weight: 800;
             color: #ffffff;
             letter-spacing: 4px;
-            text-align: center;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.4);
         }
 
         .yellow-bar {
-            width: 36px;
+            width: 34px;
             height: 3px;
             background: #f5c518;
-            margin: 0.9rem auto 0.8rem;
+            margin: 0.8rem auto 0.7rem;
             border-radius: 2px;
         }
 
         .brand-desc {
-            color: rgba(255,255,255,0.55);
-            font-size: 0.82rem;
-            text-align: center;
-            line-height: 1.7;
-            margin-bottom: 2.8rem;
+            color: rgba(255,255,255,0.75);
+            font-size: 0.8rem;
+            line-height: 1.6;
+            margin-bottom: 1.8rem;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.4);
         }
 
+        /* ─── Bank logos ─── */
         .banks-title {
-            color: rgba(255,255,255,0.3);
-            font-size: 0.66rem;
-            letter-spacing: 2.5px;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.65rem;
+            letter-spacing: 2px;
             text-transform: uppercase;
-            text-align: center;
-            margin-bottom: 0.9rem;
+            margin-bottom: 0.7rem;
         }
 
         .banks-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 0.5rem;
+            gap: 0.45rem;
             width: 100%;
         }
 
         .bank-item {
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.09);
-            border-radius: 8px;
-            height: 44px;
+            background: rgba(255,255,255,0.92);
+            border-radius: 7px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -115,15 +147,13 @@
         }
 
         .bank-item:hover {
-            background: rgba(255,255,255,0.12);
+            background: #ffffff;
         }
 
         .bank-item img {
             max-width: 100%;
             max-height: 22px;
             object-fit: contain;
-            filter: brightness(0) invert(1);
-            opacity: 0.6;
         }
 
         /* ═══════════════════════ RIGHT PANEL ═══════════════════════ */
@@ -133,8 +163,9 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: 3rem 4.5rem;
+            padding: 3rem 4rem;
             background: #ffffff;
+            position: relative;
         }
 
         .form-wrap {
@@ -206,9 +237,7 @@
             background: transparent;
         }
 
-        .field-input::placeholder {
-            color: #c8cfd8;
-        }
+        .field-input::placeholder { color: #c8cfd8; }
 
         .btn-submit {
             width: 100%;
@@ -230,10 +259,7 @@
             box-shadow: 0 5px 16px rgba(245,197,24,0.4);
         }
 
-        .btn-submit:active {
-            transform: translateY(0);
-            box-shadow: none;
-        }
+        .btn-submit:active { transform: translateY(0); box-shadow: none; }
 
         .alert-error {
             background: #fff5f5;
@@ -263,32 +289,45 @@
 
         .footer-note {
             position: absolute;
-            bottom: 2rem;
+            bottom: 1.8rem;
+            left: 50%;
+            transform: translateX(-50%);
             color: #c8cfd8;
-            font-size: 0.74rem;
+            font-size: 0.73rem;
+            white-space: nowrap;
         }
 
-        /* ═══════════════════════ RESPONSIVE ═══════════════════════ */
-        @media (max-width: 900px) {
-            .panel-right { padding: 3rem 3rem; }
-        }
-
+        /* ═══════════════════════ MOBILE ═══════════════════════ */
         @media (max-width: 768px) {
             body { flex-direction: column; }
 
+            /* Sur mobile : panel gauche en bannière compacte */
             .panel-left {
                 width: 100%;
-                min-height: auto;
-                padding: 2.5rem 1.5rem;
+                min-height: 200px;
+                max-height: 220px;
+                padding: 1.5rem 1.2rem;
+                justify-content: flex-end;
             }
 
-            .banks-grid { grid-template-columns: repeat(4, 1fr); }
+            .brand-logo { width: 50px; height: 50px; margin-bottom: 0.6rem; }
+            .brand-logo i { font-size: 1.2rem; }
+            .brand-name { font-size: 1.3rem; letter-spacing: 3px; }
+            .yellow-bar { margin: 0.5rem auto 0.5rem; }
+            .brand-desc { display: none; }
+
+            .banks-grid {
+                grid-template-columns: repeat(6, 1fr);
+                gap: 0.3rem;
+            }
+
+            .bank-item { height: 32px; }
+            .bank-item img { max-height: 16px; }
 
             .panel-right {
                 width: 100%;
                 min-height: auto;
-                padding: 2.5rem 1.5rem 4rem;
-                position: relative;
+                padding: 2rem 1.5rem 4rem;
             }
 
             .form-wrap { max-width: 100%; }
@@ -299,41 +338,42 @@
 
     <!-- ═══════════════════════ LEFT PANEL ═══════════════════════ -->
     <div class="panel-left">
-        <div class="brand-logo">
-            <i class="fas fa-university"></i>
-        </div>
-        <div class="brand-name">BOITE‑VIRO</div>
-        <div class="yellow-bar"></div>
-        <p class="brand-desc">
-            Plateforme professionnelle de gestion<br>
-            des virements bancaires internationaux
-        </p>
+        <div class="panel-left-content">
+            <div class="brand-logo">
+                <i class="fas fa-university"></i>
+            </div>
+            <div class="brand-name">BOITE‑VIRO</div>
+            <div class="yellow-bar"></div>
+            <p class="brand-desc">
+                Gestion des virements bancaires internationaux
+            </p>
 
-        <div class="banks-title">Établissements partenaires</div>
-        <div class="banks-grid">
-            <div class="bank-item">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/BNP_Paribas_logo.svg/320px-BNP_Paribas_logo.svg.png" alt="BNP Paribas">
-            </div>
-            <div class="bank-item">
-                <img src="https://upload.wikimedia.org/wikipedia/fr/thumb/0/0e/Cr%C3%A9dit_Agricole_logo.svg/320px-Cr%C3%A9dit_Agricole_logo.svg.png" alt="Crédit Agricole">
-            </div>
-            <div class="bank-item">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Soci%C3%A9t%C3%A9_G%C3%A9n%C3%A9rale_logo.svg/320px-Soci%C3%A9t%C3%A9_G%C3%A9n%C3%A9rale_logo.svg.png" alt="Société Générale">
-            </div>
-            <div class="bank-item">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/HSBC_logo_%282018%29.svg/320px-HSBC_logo_%282018%29.svg.png" alt="HSBC">
-            </div>
-            <div class="bank-item">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Deutsche_Bank_logo.svg/320px-Deutsche_Bank_logo.svg.png" alt="Deutsche Bank">
-            </div>
-            <div class="bank-item">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/ING_Group_logo.svg/320px-ING_Group_logo.svg.png" alt="ING Bank">
+            <div class="banks-title">Établissements partenaires</div>
+            <div class="banks-grid">
+                <div class="bank-item">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/BNP_Paribas_logo.svg/320px-BNP_Paribas_logo.svg.png" alt="BNP Paribas">
+                </div>
+                <div class="bank-item">
+                    <img src="https://upload.wikimedia.org/wikipedia/fr/thumb/0/0e/Cr%C3%A9dit_Agricole_logo.svg/320px-Cr%C3%A9dit_Agricole_logo.svg.png" alt="Crédit Agricole">
+                </div>
+                <div class="bank-item">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Soci%C3%A9t%C3%A9_G%C3%A9n%C3%A9rale_logo.svg/320px-Soci%C3%A9t%C3%A9_G%C3%A9n%C3%A9rale_logo.svg.png" alt="Société Générale">
+                </div>
+                <div class="bank-item">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/HSBC_logo_%282018%29.svg/320px-HSBC_logo_%282018%29.svg.png" alt="HSBC">
+                </div>
+                <div class="bank-item">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Deutsche_Bank_logo.svg/320px-Deutsche_Bank_logo.svg.png" alt="Deutsche Bank">
+                </div>
+                <div class="bank-item">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/ING_Group_logo.svg/320px-ING_Group_logo.svg.png" alt="ING Bank">
+                </div>
             </div>
         </div>
     </div>
 
     <!-- ═══════════════════════ RIGHT PANEL ═══════════════════════ -->
-    <div class="panel-right" style="position:relative;">
+    <div class="panel-right">
         <div class="form-wrap">
             <div class="login-title">Bienvenue</div>
             <div class="login-sub">Connectez-vous à votre espace sécurisé</div>
@@ -377,9 +417,7 @@
             </div>
         </div>
 
-        <div class="footer-note">
-            &copy; 2025 BOITE-VIRO — Tous droits réservés
-        </div>
+        <div class="footer-note">&copy; 2025 BOITE-VIRO — Tous droits réservés</div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
