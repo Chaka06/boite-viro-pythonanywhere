@@ -496,12 +496,14 @@ FONT_BOLD  = 'DejaVu-Bold' if _FONTS_OK else 'Helvetica-Bold'
 class BankCanvas(canvas.Canvas):
 
     def __init__(self, *args, **kwargs):
-        self.logo_path  = kwargs.pop('logo_path',  None)
-        self.bank_info  = kwargs.pop('bank_info',  {})
-        self.doc_title  = kwargs.pop('doc_title',  '')
-        self.ref_num    = kwargs.pop('ref_num',    '')
-        self.doc_date   = kwargs.pop('doc_date',   '')
-        self.langue     = kwargs.pop('langue',     'fr')
+        self.logo_path   = kwargs.pop('logo_path',   None)
+        self.bank_info   = kwargs.pop('bank_info',   {})
+        self.doc_title   = kwargs.pop('doc_title',   '')
+        self.ref_num     = kwargs.pop('ref_num',     '')
+        self.doc_date    = kwargs.pop('doc_date',    '')
+        self.langue      = kwargs.pop('langue',      'fr')
+        self.bank_numero = kwargs.pop('bank_numero', '')
+        self.bank_siege  = kwargs.pop('bank_siege',  '')
         super().__init__(*args, **kwargs)
 
     def showPage(self):
@@ -519,54 +521,76 @@ class BankCanvas(canvas.Canvas):
     def _draw_header(self):
         t = get_translations(self.langue)
 
-        # Filet noir épais tout en haut
+        # ── Filet noir 3pt tout en haut
         self.setStrokeColor(C_BLACK)
         self.setLineWidth(3)
         self.line(0, PAGE_H - 2, PAGE_W, PAGE_H - 2)
 
-        # Fond gris très clair sur toute la zone header
+        # ── Fond gris clair zone logo (y = PAGE_H-3 → PAGE_H-82)
         self.setFillColor(C_LIGHT)
-        self.rect(0, PAGE_H - 78, PAGE_W, 76, fill=1, stroke=0)
+        self.rect(0, PAGE_H - 82, PAGE_W, 79, fill=1, stroke=0)
 
-        # Logo (colonne gauche du header)
-        LOGO_X, LOGO_Y, LOGO_W, LOGO_H = ML, PAGE_H - 72, 110, 48
+        # ── Logo — colonne gauche
+        LOGO_X = ML
+        LOGO_Y = PAGE_H - 76
+        LOGO_W = 130
+        LOGO_H = 52
+        logo_drawn = False
         if self.logo_path and os.path.exists(self.logo_path):
             try:
                 self.drawImage(
                     self.logo_path, LOGO_X, LOGO_Y,
                     width=LOGO_W, height=LOGO_H,
-                    preserveAspectRatio=True, mask='auto',
+                    preserveAspectRatio=True,
                 )
+                logo_drawn = True
             except Exception:
-                self._text_logo(LOGO_X, LOGO_Y + LOGO_H // 2)
-        else:
-            self._text_logo(LOGO_X, LOGO_Y + LOGO_H // 2)
+                pass
+        if not logo_drawn:
+            # Fallback : nom de la banque en texte
+            self.setFillColor(C_DARK)
+            self.setFont(FONT_BOLD, 12)
+            self.drawString(LOGO_X, LOGO_Y + 18, self.bank_info.get('name', 'BANK'))
 
-        # Titre du document (droite, 2 lignes)
+        # ── Infos banque — colonne droite (alignées à droite)
+        RIGHT_X = PAGE_W - MR
+        # Nom de la banque
+        self.setFillColor(C_BLACK)
+        self.setFont(FONT_BOLD, 10)
+        self.drawRightString(RIGHT_X, PAGE_H - 26, self.bank_info.get('name', ''))
+
+        # Numéro d'enregistrement
+        if self.bank_numero:
+            self.setFillColor(C_MED)
+            self.setFont(FONT, 7.5)
+            self.drawRightString(RIGHT_X, PAGE_H - 37, self.bank_numero)
+
+        # Siège social
+        if self.bank_siege:
+            self.setFont(FONT, 7.5)
+            self.drawRightString(RIGHT_X, PAGE_H - 47, self.bank_siege)
+
+        # Type de document (en italique via gris foncé)
         self.setFillColor(C_DARK)
-        self.setFont(FONT_BOLD, 11)
-        self.drawRightString(PAGE_W - MR, PAGE_H - 30, self.doc_title)
+        self.setFont(FONT_BOLD, 7.5)
+        self.drawRightString(RIGHT_X, PAGE_H - 60, self.doc_title)
 
-        self.setFont(FONT, 7.5)
-        self.setFillColor(C_MED)
-        self.drawRightString(PAGE_W - MR, PAGE_H - 43, t['dept_operations'])
-
-        # Filet gris de séparation header / métadonnées
+        # ── Filet séparateur header / bande méta
         self.setStrokeColor(C_BORDER)
         self.setLineWidth(0.6)
-        self.line(ML, PAGE_H - 80, PAGE_W - MR, PAGE_H - 80)
+        self.line(ML, PAGE_H - 84, PAGE_W - MR, PAGE_H - 84)
 
-        # Bande méta : référence à gauche, date à droite
+        # ── Bande méta : référence gauche, date droite
         self.setFillColor(C_MED)
-        self.setFont(FONT, 8)
-        self.drawString(ML, PAGE_H - 94,
+        self.setFont(FONT, 7.5)
+        self.drawString(ML, PAGE_H - 97,
                         f"{t['reference']} :  {self.ref_num}")
-        self.drawRightString(PAGE_W - MR, PAGE_H - 94,
+        self.drawRightString(PAGE_W - MR, PAGE_H - 97,
                              f"{t['date']} :  {self.doc_date}")
 
-        # Filet fin sous la bande méta
+        # ── Filet fin sous bande méta
         self.setLineWidth(0.4)
-        self.line(ML, PAGE_H - 100, PAGE_W - MR, PAGE_H - 100)
+        self.line(ML, PAGE_H - 104, PAGE_W - MR, PAGE_H - 104)
 
     def _text_logo(self, x, y):
         """Fallback texte si le logo est absent"""
@@ -674,11 +698,13 @@ def generer_pdf_initiation(virement):
             doc_title=t['titre_initiation'],
             ref_num=ref, doc_date=date_str,
             langue=virement.langue,
+            bank_numero=bank_info.get('numero', ''),
+            bank_siege=bank_info.get('siege_social', ''),
         )
 
     doc = SimpleDocTemplate(
         filepath, pagesize=A4,
-        topMargin=112, bottomMargin=72,
+        topMargin=118, bottomMargin=72,
         leftMargin=ML, rightMargin=MR,
         canvasmaker=make_canvas,
     )
@@ -838,11 +864,13 @@ def generer_pdf_rejet(rejet):
             doc_title=t['titre_rejet'],
             ref_num=ref, doc_date=date_str,
             langue=virement.langue,
+            bank_numero=bank_info.get('numero', ''),
+            bank_siege=bank_info.get('siege_social', ''),
         )
 
     doc = SimpleDocTemplate(
         filepath, pagesize=A4,
-        topMargin=112, bottomMargin=72,
+        topMargin=118, bottomMargin=72,
         leftMargin=ML, rightMargin=MR,
         canvasmaker=make_canvas,
     )
