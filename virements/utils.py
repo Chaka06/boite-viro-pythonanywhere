@@ -1,186 +1,54 @@
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import cm, mm
-from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.lib.units import cm
+from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from django.conf import settings
 from datetime import datetime
 import os
-import requests
-from PIL import Image as PILImage
-from io import BytesIO
 from .email_utils import get_bank_info
 
-def hex_to_color(hex_color):
-    """Convertir une couleur hexadécimale en colors.Color"""
-    try:
-        # Essayer HexColor si disponible
-        return colors.HexColor(hex_color)
-    except:
-        # Fallback: convertir manuellement
-        hex_color = hex_color.lstrip('#')
-        if len(hex_color) == 6:
-            r = int(hex_color[0:2], 16) / 255.0
-            g = int(hex_color[2:4], 16) / 255.0
-            b = int(hex_color[4:6], 16) / 255.0
-            return colors.Color(r, g, b)
-        return colors.Color(0, 0.4, 0.8)  # Couleur par défaut bleue
+# ── Palette strictement noir / blanc / gris ──────────────────────────
+C_BLACK  = colors.Color(0.08, 0.08, 0.08)   # texte principal
+C_DARK   = colors.Color(0.20, 0.20, 0.20)   # en-têtes de section
+C_MED    = colors.Color(0.45, 0.45, 0.45)   # labels, pieds de page
+C_BORDER = colors.Color(0.70, 0.70, 0.70)   # bordures de tableaux
+C_LIGHT  = colors.Color(0.94, 0.94, 0.94)   # fond alternance lignes
+C_WHITE  = colors.white
 
-def get_logo_path(banque_code):
-    """Télécharger et retourner le chemin du logo de la banque depuis l'URL"""
-    # Créer le dossier des logos s'il n'existe pas
-    logos_dir = os.path.join(settings.MEDIA_ROOT, 'logos', 'banques')
-    os.makedirs(logos_dir, exist_ok=True)
-    
-    logo_path = os.path.join(logos_dir, f'{banque_code}.png')
-    
-    # Si le logo n'existe pas, le télécharger depuis l'URL
-    if not os.path.exists(logo_path):
-        try:
-            # Récupérer l'URL du logo depuis get_bank_info
-            bank_info = get_bank_info(banque_code)
-            logo_url = bank_info.get('logo_url', '')
-            
-            if logo_url:
-                # Télécharger le logo
-                response = requests.get(logo_url, timeout=10, headers={'User-Agent': 'Mozilla/5.0'})
-                if response.status_code == 200:
-                    # Sauvegarder l'image
-                    img = PILImage.open(BytesIO(response.content))
-                    # Convertir en RGB si nécessaire (pour les PNG avec transparence)
-                    if img.mode in ('RGBA', 'LA', 'P'):
-                        background = PILImage.new('RGB', img.size, (255, 255, 255))
-                        if img.mode == 'P':
-                            img = img.convert('RGBA')
-                        background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
-                        img = background
-                    # Redimensionner si trop grand (max 300px de largeur)
-                    if img.width > 300:
-                        ratio = 300 / img.width
-                        new_height = int(img.height * ratio)
-                        img = img.resize((300, new_height), PILImage.Resampling.LANCZOS)
-                    img.save(logo_path, 'PNG', quality=95)
-                    print(f"Logo téléchargé pour {banque_code} : {logo_path}")
-                else:
-                    print(f"Impossible de télécharger le logo pour {banque_code}, création d'un logo générique")
-                    create_generic_logo(logo_path, banque_code)
-            else:
-                create_generic_logo(logo_path, banque_code)
-        except Exception as e:
-            print(f"Erreur lors du téléchargement du logo pour {banque_code}: {e}")
-            # Créer un logo générique en cas d'erreur
-            if not os.path.exists(logo_path):
-                create_generic_logo(logo_path, banque_code)
-    
-    return logo_path
+PAGE_W, PAGE_H = A4        # 595 × 842 pt
+ML = 45                    # marge gauche
+MR = 45                    # marge droite
+CW = PAGE_W - ML - MR      # largeur utile ≈ 505 pt
 
-def create_generic_logo(logo_path, banque_code):
-    """Créer un logo générique pour une banque"""
-    try:
-        # Couleurs par banque
-        bank_colors = {
-            'bnp_paribas': (0, 150, 82),
-            'credit_agricole': (0, 150, 130),
-            'bnp_paribas_fortis': (0, 100, 180),
-            'credit_mutuel': (0, 80, 150),
-            'credit_suisse': (200, 16, 46),
-            'credit_lyonnais': (0, 60, 120),
-            'banque_populaire': (200, 50, 50),
-            'societe_generale': (200, 0, 50),
-            'intesa_sanpaolo': (0, 80, 150),
-            'deutsche_bank': (0, 25, 80),
-            'hsbc': (218, 41, 28),
-            'barclays': (0, 120, 215),
-            'citibank': (0, 120, 215),
-            'ubs': (0, 0, 0),
-            'ing_bank': (255, 120, 0)
-        }
-        
-        color = bank_colors.get(banque_code, (70, 130, 180))
-        
-        # Créer une image 200x150 avec PIL
-        img = PILImage.new('RGB', (200, 150), color)
-        from PIL import ImageDraw, ImageFont
-        
-        draw = ImageDraw.Draw(img)
-        
-        # Dessiner un cercle blanc
-        draw.ellipse([50, 25, 150, 125], fill='white', outline=color, width=3)
-        
-        # Ajouter du texte (initiales de la banque)
-        try:
-            # Linux (PythonAnywhere, Ubuntu/Debian)
-            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 24)
-        except:
-            try:
-                # macOS (développement local)
-                font = ImageFont.truetype("/System/Library/Fonts/Arial.ttf", 24)
-            except:
-                font = ImageFont.load_default()
-        
-        # Extraire les initiales
-        bank_names = {
-            'bnp_paribas': 'BNP',
-            'credit_agricole': 'CA',
-            'bnp_paribas_fortis': 'BPF',
-            'credit_mutuel': 'CM',
-            'credit_suisse': 'CS',
-            'credit_lyonnais': 'CL',
-            'banque_populaire': 'BP',
-            'societe_generale': 'SG',
-            'intesa_sanpaolo': 'ISP',
-            'deutsche_bank': 'DB',
-            'hsbc': 'HSBC',
-            'barclays': 'BAR',
-            'citibank': 'CITI',
-            'ubs': 'UBS',
-            'ing_bank': 'ING'
-        }
-        
-        text = bank_names.get(banque_code, 'BK')
-        
-        # Centrer le texte
-        bbox = draw.textbbox((0, 0), text, font=font)
-        text_width = bbox[2] - bbox[0]
-        text_height = bbox[3] - bbox[1]
-        
-        x = (200 - text_width) // 2
-        y = (150 - text_height) // 2
-        
-        draw.text((x, y), text, fill=color, font=font)
-        
-        img.save(logo_path, 'PNG', quality=95)
-        print(f"Logo générique créé pour {banque_code} : {logo_path}")
-        
-    except Exception as e:
-        print(f"Erreur lors de la création du logo générique: {e}")
 
+# ─────────────────────────────────────────────────────────────────────
+# Traductions
+# ─────────────────────────────────────────────────────────────────────
 def get_translations(langue):
-    """Retourner les traductions complètes selon la langue"""
     translations = {
         'fr': {
             'titre_initiation': 'ORDRE DE VIREMENT INTERNATIONAL',
             'titre_rejet': 'AVIS DE REJET DE VIREMENT',
             'beneficiaire': 'BÉNÉFICIAIRE',
-            'donneur_ordre': 'DONNEUR D\'ORDRE',
+            'donneur_ordre': "DONNEUR D'ORDRE",
             'compte': 'Numéro de compte',
             'bic': 'Code BIC/SWIFT',
             'montant': 'Montant',
             'devise': 'Devise',
-            'date': 'Date d\'exécution',
+            'date': "Date d'exécution",
             'numero': 'Référence',
             'banque': 'Établissement émetteur',
             'frais': 'Frais de redirection',
             'motif': 'Motif du rejet',
             'signature': 'Service des Opérations',
-            'reference': 'Référence de l\'opération',
+            'reference': "Référence de l'opération",
             'statut': 'Statut',
-            'details_operation': 'DÉTAILS DE L\'OPÉRATION',
+            'details_operation': "DÉTAILS DE L'OPÉRATION",
             'informations_parties': 'INFORMATIONS DES PARTIES',
             'avis_important': 'AVIS IMPORTANT',
             'msg_rejet': 'Le présent virement a été rejeté pour le motif indiqué ci-dessous.',
@@ -196,9 +64,13 @@ def get_translations(langue):
             'dept_operations': 'DÉPARTEMENT DES OPÉRATIONS INTERNATIONALES',
             'systeme_gestion': 'Système de Gestion des Virements',
             'document_confidentiel': 'Ce document est confidentiel et destiné exclusivement au bénéficiaire mentionné.',
-            'reproduction_interdite': 'Toute reproduction, distribution ou utilisation non autorisée est strictement interdite.',
-            'document_genere': 'Document généré automatiquement par BOITE-VIRO le',
-            'page': 'Page'
+            'reproduction_interdite': 'Toute reproduction ou distribution non autorisée est strictement interdite.',
+            'document_genere': 'Document généré automatiquement le',
+            'page': 'Page',
+            'statut_traitement': 'EN TRAITEMENT',
+            'donneur_ordre_label': 'Le donneur d\'ordre',
+            'visa_banque': 'Visa de la banque émettrice',
+            'montant_virement': 'MONTANT DU VIREMENT',
         },
         'en': {
             'titre_initiation': 'INTERNATIONAL WIRE TRANSFER ORDER',
@@ -233,9 +105,13 @@ def get_translations(langue):
             'dept_operations': 'INTERNATIONAL OPERATIONS DEPARTMENT',
             'systeme_gestion': 'Wire Transfer Management System',
             'document_confidentiel': 'This document is confidential and intended exclusively for the mentioned beneficiary.',
-            'reproduction_interdite': 'Any reproduction, distribution or unauthorized use is strictly prohibited.',
-            'document_genere': 'Document automatically generated by BOITE-VIRO on',
-            'page': 'Page'
+            'reproduction_interdite': 'Any reproduction or unauthorized use is strictly prohibited.',
+            'document_genere': 'Document automatically generated on',
+            'page': 'Page',
+            'statut_traitement': 'PROCESSING',
+            'donneur_ordre_label': 'The ordering party',
+            'visa_banque': 'Bank visa',
+            'montant_virement': 'TRANSFER AMOUNT',
         },
         'es': {
             'titre_initiation': 'ORDEN DE TRANSFERENCIA INTERNACIONAL',
@@ -270,9 +146,13 @@ def get_translations(langue):
             'dept_operations': 'DEPARTAMENTO DE OPERACIONES INTERNACIONALES',
             'systeme_gestion': 'Sistema de Gestión de Transferencias',
             'document_confidentiel': 'Este documento es confidencial y destinado exclusivamente al beneficiario mencionado.',
-            'reproduction_interdite': 'Cualquier reproducción, distribución o uso no autorizado está estrictamente prohibido.',
-            'document_genere': 'Documento generado automáticamente por BOITE-VIRO el',
-            'page': 'Página'
+            'reproduction_interdite': 'Cualquier reproducción o uso no autorizado está estrictamente prohibido.',
+            'document_genere': 'Documento generado automáticamente el',
+            'page': 'Página',
+            'statut_traitement': 'EN PROCESO',
+            'donneur_ordre_label': 'El ordenante',
+            'visa_banque': 'Visado del banco',
+            'montant_virement': 'IMPORTE DE LA TRANSFERENCIA',
         },
         'it': {
             'titre_initiation': 'ORDINE DI BONIFICO INTERNAZIONALE',
@@ -289,9 +169,9 @@ def get_translations(langue):
             'frais': 'Commissioni di reindirizzamento',
             'motif': 'Motivo del rifiuto',
             'signature': 'Dipartimento Operazioni',
-            'reference': 'Riferimento dell\'operazione',
+            'reference': "Riferimento dell'operazione",
             'statut': 'Stato',
-            'details_operation': 'DETTAGLI DELL\'OPERAZIONE',
+            'details_operation': "DETTAGLI DELL'OPERAZIONE",
             'informations_parties': 'INFORMAZIONI DELLE PARTI',
             'avis_important': 'AVVISO IMPORTANTE',
             'msg_rejet': 'Questo bonifico è stato rifiutato per il motivo indicato di seguito.',
@@ -307,9 +187,13 @@ def get_translations(langue):
             'dept_operations': 'DIPARTIMENTO OPERAZIONI INTERNAZIONALI',
             'systeme_gestion': 'Sistema di Gestione Bonifici',
             'document_confidentiel': 'Questo documento è confidenziale e destinato esclusivamente al beneficiario menzionato.',
-            'reproduction_interdite': 'Qualsiasi riproduzione, distribuzione o uso non autorizzato è severamente vietato.',
-            'document_genere': 'Documento generato automaticamente da BOITE-VIRO il',
-            'page': 'Pagina'
+            'reproduction_interdite': 'Qualsiasi riproduzione o uso non autorizzato è severamente vietato.',
+            'document_genere': 'Documento generato automaticamente il',
+            'page': 'Pagina',
+            'statut_traitement': 'IN ELABORAZIONE',
+            'donneur_ordre_label': "L'ordinante",
+            'visa_banque': 'Visto della banca',
+            'montant_virement': 'IMPORTO DEL BONIFICO',
         },
         'de': {
             'titre_initiation': 'INTERNATIONALE ÜBERWEISUNGSANWEISUNG',
@@ -344,9 +228,13 @@ def get_translations(langue):
             'dept_operations': 'ABTEILUNG INTERNATIONALE OPERATIONEN',
             'systeme_gestion': 'Überweisungs-Managementsystem',
             'document_confidentiel': 'Dieses Dokument ist vertraulich und ausschließlich für den genannten Begünstigten bestimmt.',
-            'reproduction_interdite': 'Jede Reproduktion, Verteilung oder unbefugte Verwendung ist strengstens untersagt.',
-            'document_genere': 'Dokument automatisch generiert von BOITE-VIRO am',
-            'page': 'Seite'
+            'reproduction_interdite': 'Jede Reproduktion oder unbefugte Verwendung ist strengstens untersagt.',
+            'document_genere': 'Dokument automatisch generiert am',
+            'page': 'Seite',
+            'statut_traitement': 'IN BEARBEITUNG',
+            'donneur_ordre_label': 'Der Auftraggeber',
+            'visa_banque': 'Bankvisum',
+            'montant_virement': 'ÜBERWEISUNGSBETRAG',
         },
         'pl': {
             'titre_initiation': 'MIĘDZYNARODOWE ZLECENIE PRZELEWU',
@@ -381,9 +269,13 @@ def get_translations(langue):
             'dept_operations': 'DZIAŁ OPERACJI MIĘDZYNARODOWYCH',
             'systeme_gestion': 'System Zarządzania Przelewami',
             'document_confidentiel': 'Ten dokument jest poufny i przeznaczony wyłącznie dla wymienionego beneficjenta.',
-            'reproduction_interdite': 'Jakiekolwiek powielanie, dystrybucja lub nieautoryzowane użycie jest surowo zabronione.',
-            'document_genere': 'Dokument automatycznie wygenerowany przez BOITE-VIRO dnia',
-            'page': 'Strona'
+            'reproduction_interdite': 'Jakiekolwiek powielanie lub nieautoryzowane użycie jest surowo zabronione.',
+            'document_genere': 'Dokument automatycznie wygenerowany dnia',
+            'page': 'Strona',
+            'statut_traitement': 'W TRAKCIE PRZETWARZANIA',
+            'donneur_ordre_label': 'Zleceniodawca',
+            'visa_banque': 'Wiza bankowa',
+            'montant_virement': 'KWOTA PRZELEWU',
         },
         'ru': {
             'titre_initiation': 'МЕЖДУНАРОДНОЕ РАСПОРЯЖЕНИЕ О ПЕРЕВОДЕ',
@@ -418,9 +310,13 @@ def get_translations(langue):
             'dept_operations': 'ОТДЕЛ МЕЖДУНАРОДНЫХ ОПЕРАЦИЙ',
             'systeme_gestion': 'Система Управления Переводами',
             'document_confidentiel': 'Этот документ является конфиденциальным и предназначен исключительно для указанного бенефициара.',
-            'reproduction_interdite': 'Любое воспроизведение, распространение или несанкционированное использование строго запрещено.',
-            'document_genere': 'Документ автоматически сгенерирован BOITE-VIRO',
-            'page': 'Страница'
+            'reproduction_interdite': 'Любое воспроизведение или несанкционированное использование строго запрещено.',
+            'document_genere': 'Документ автоматически сгенерирован',
+            'page': 'Страница',
+            'statut_traitement': 'В ОБРАБОТКЕ',
+            'donneur_ordre_label': 'Плательщик',
+            'visa_banque': 'Виза банка',
+            'montant_virement': 'СУММА ПЕРЕВОДА',
         },
         'pt': {
             'titre_initiation': 'ORDEM DE TRANSFERÊNCIA INTERNACIONAL',
@@ -455,9 +351,13 @@ def get_translations(langue):
             'dept_operations': 'DEPARTAMENTO DE OPERAÇÕES INTERNACIONAIS',
             'systeme_gestion': 'Sistema de Gestão de Transferências',
             'document_confidentiel': 'Este documento é confidencial e destinado exclusivamente ao beneficiário mencionado.',
-            'reproduction_interdite': 'Qualquer reprodução, distribuição ou uso não autorizado é estritamente proibido.',
-            'document_genere': 'Documento gerado automaticamente por BOITE-VIRO em',
-            'page': 'Página'
+            'reproduction_interdite': 'Qualquer reprodução ou uso não autorizado é estritamente proibido.',
+            'document_genere': 'Documento gerado automaticamente em',
+            'page': 'Página',
+            'statut_traitement': 'EM PROCESSAMENTO',
+            'donneur_ordre_label': 'O ordenante',
+            'visa_banque': 'Visto do banco',
+            'montant_virement': 'VALOR DA TRANSFERÊNCIA',
         },
         'ar': {
             'titre_initiation': 'أمر التحويل الدولي',
@@ -491,10 +391,14 @@ def get_translations(langue):
             'rejete': 'مرفوض',
             'dept_operations': 'قسم العمليات الدولية',
             'systeme_gestion': 'نظام إدارة التحويلات',
-            'document_confidentiel': 'هذا المستند سري ومخصص حصرياً للمستفيد المذكور.',
-            'reproduction_interdite': 'أي نسخ أو توزيع أو استخدام غير مصرح به محظور تماماً.',
-            'document_genere': 'تم إنشاء هذا المستند تلقائياً بواسطة BOITE-VIRO في',
-            'page': 'صفحة'
+            'document_confidentiel': 'هذا المستند سري ومخصص حصراً للمستفيد المذكور.',
+            'reproduction_interdite': 'أي نسخ أو استخدام غير مصرح به محظور تماماً.',
+            'document_genere': 'تم إنشاء هذا المستند تلقائياً في',
+            'page': 'صفحة',
+            'statut_traitement': 'قيد المعالجة',
+            'donneur_ordre_label': 'آمر الدفع',
+            'visa_banque': 'تأشيرة البنك',
+            'montant_virement': 'مبلغ التحويل',
         },
         'zh': {
             'titre_initiation': '国际转账指令',
@@ -529,564 +433,509 @@ def get_translations(langue):
             'dept_operations': '国际运营部',
             'systeme_gestion': '转账管理系统',
             'document_confidentiel': '本文档为机密文件，仅供指定收款人使用。',
-            'reproduction_interdite': '严禁任何未经授权的复制、分发或使用。',
-            'document_genere': '本文档由BOITE-VIRO系统自动生成于',
-            'page': '页'
-        }
+            'reproduction_interdite': '严禁任何未经授权的复制或使用。',
+            'document_genere': '本文档由系统自动生成于',
+            'page': '页',
+            'statut_traitement': '处理中',
+            'donneur_ordre_label': '付款人',
+            'visa_banque': '银行签证',
+            'montant_virement': '转账金额',
+        },
     }
-    
     return translations.get(langue, translations['fr'])
 
+
+# ─────────────────────────────────────────────────────────────────────
+# Utilitaires
+# ─────────────────────────────────────────────────────────────────────
 def number_to_words(number, langue='fr'):
-    """Convertir un nombre en lettres selon la langue"""
     try:
-        # Import conditionnel de num2words
         from num2words import num2words
-        
-        lang_map = {
-            'fr': 'fr',
-            'en': 'en',
-            'es': 'es', 
-            'it': 'it',
-            'de': 'de',
-            'pl': 'pl',
-            'ru': 'ru',
-            'pt': 'pt',
-            'ar': 'ar',
-            'zh': 'zh'
-        }
-        
-        lang_code = lang_map.get(langue, 'fr')
-        return num2words(number, lang=lang_code).upper()
-        
-    except ImportError:
-        # Fallback simple en français si num2words n'est pas installé
-        if number == 0:
-            return "ZÉRO"
-        elif number < 20:
-            units = ["", "UN", "DEUX", "TROIS", "QUATRE", "CINQ", "SIX", "SEPT", "HUIT", "NEUF",
-                    "DIX", "ONZE", "DOUZE", "TREIZE", "QUATORZE", "QUINZE", "SEIZE", 
-                    "DIX-SEPT", "DIX-HUIT", "DIX-NEUF"]
-            return units[int(number)]
-        else:
-            return f"({number:,.2f})"
-    except:
+        lang_map = {'fr':'fr','en':'en','es':'es','it':'it','de':'de',
+                    'pl':'pl','ru':'ru','pt':'pt','ar':'ar','zh':'zh'}
+        return num2words(number, lang=lang_map.get(langue, 'fr')).upper()
+    except Exception:
         return f"({number:,.2f})"
 
-# Enregistrer les polices Unicode au démarrage
+
+def get_logo_path(banque_code):
+    """Retourne le chemin du logo depuis media/logos/<banque>.png"""
+    path = os.path.join(settings.MEDIA_ROOT, 'logos', f'{banque_code}.png')
+    return path if os.path.exists(path) else None
+
+
 def register_unicode_fonts():
-    """Enregistrer les polices Unicode pour supporter toutes les langues"""
-    try:
-        # Essayer de charger DejaVu Sans (support Unicode complet)
-        font_paths = [
-            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
-            '/System/Library/Fonts/Supplemental/Arial Unicode.ttf',
-            '/Library/Fonts/Arial Unicode.ttf',
-            'C:/Windows/Fonts/arial.ttf',  # Windows
-        ]
-        
-        for font_path in font_paths:
-            if os.path.exists(font_path):
-                try:
-                    pdfmetrics.registerFont(TTFont('DejaVu', font_path))
-                    pdfmetrics.registerFont(TTFont('DejaVu-Bold', font_path.replace('Sans.ttf', 'Sans-Bold.ttf').replace('Arial Unicode.ttf', 'Arial Unicode.ttf')))
-                    print(f"Police Unicode chargée: {font_path}")
-                    return True
-                except:
-                    continue
-        
-        # Si aucune police Unicode trouvée, utiliser Helvetica (limité)
-        print("Aucune police Unicode trouvée, utilisation de Helvetica (limité)")
-        return False
-    except Exception as e:
-        print(f"Erreur lors du chargement des polices Unicode: {e}")
-        return False
+    font_paths = [
+        '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+        '/System/Library/Fonts/Supplemental/Arial Unicode.ttf',
+        '/Library/Fonts/Arial Unicode.ttf',
+    ]
+    for fp in font_paths:
+        if os.path.exists(fp):
+            try:
+                pdfmetrics.registerFont(TTFont('DejaVu', fp))
+                bold_fp = fp.replace('Sans.ttf', 'Sans-Bold.ttf')
+                if os.path.exists(bold_fp):
+                    pdfmetrics.registerFont(TTFont('DejaVu-Bold', bold_fp))
+                else:
+                    pdfmetrics.registerFont(TTFont('DejaVu-Bold', fp))
+                return True
+            except Exception:
+                continue
+    return False
 
-# Enregistrer les polices au chargement du module
-_UNICODE_FONTS_LOADED = register_unicode_fonts()
-_UNICODE_FONT_NAME = 'DejaVu' if _UNICODE_FONTS_LOADED else 'Helvetica'
 
-class BankDocumentCanvas(canvas.Canvas):
-    """Canvas personnalisé pour les documents bancaires"""
-    
+_FONTS_OK  = register_unicode_fonts()
+FONT       = 'DejaVu'      if _FONTS_OK else 'Helvetica'
+FONT_BOLD  = 'DejaVu-Bold' if _FONTS_OK else 'Helvetica-Bold'
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Canvas personnalisé — en-tête & pied de page
+# ─────────────────────────────────────────────────────────────────────
+class BankCanvas(canvas.Canvas):
+
     def __init__(self, *args, **kwargs):
-        self.logo_path = kwargs.pop('logo_path', None)
-        self.banque_name = kwargs.pop('banque_name', '')
-        self.bank_info = kwargs.pop('bank_info', {})
-        self.langue = kwargs.pop('langue', 'fr')
+        self.logo_path  = kwargs.pop('logo_path',  None)
+        self.bank_info  = kwargs.pop('bank_info',  {})
+        self.doc_title  = kwargs.pop('doc_title',  '')
+        self.ref_num    = kwargs.pop('ref_num',    '')
+        self.doc_date   = kwargs.pop('doc_date',   '')
+        self.langue     = kwargs.pop('langue',     'fr')
         super().__init__(*args, **kwargs)
-    
-    def draw_watermark(self):
-        """Ajouter un filigrane discret"""
-        self.saveState()
-        self.setFillColor(colors.lightgrey, alpha=0.05)
-        self.setFont(f"{_UNICODE_FONT_NAME}-Bold" if _UNICODE_FONTS_LOADED else "Helvetica-Bold", 80)
-        self.rotate(45)
-        self.drawCentredText(300, -200, "CONFIDENTIEL")
-        self.restoreState()
-    
-    def draw_header(self):
-        """Dessiner l'en-tête professionnel de la banque"""
+
+    # ── Appelé par doc.build via onFirstPage / onLaterPages ──────────
+    def draw_page_decorations(self):
+        self._draw_header()
+        self._draw_footer()
+
+    # ── En-tête ──────────────────────────────────────────────────────
+    def _draw_header(self):
         t = get_translations(self.langue)
-        
-        # Couleur de la banque depuis bank_info
-        bank_color = hex_to_color(self.bank_info.get('primary_color', '#0066CC'))
-        
-        # Bandeau supérieur avec couleur de la banque
-        self.setFillColor(bank_color)
-        self.rect(0, A4[1] - 50, A4[0], 50, fill=1, stroke=0)
-        
-        # Logo de la banque (sur fond blanc dans le bandeau)
+
+        # Filet noir épais tout en haut
+        self.setStrokeColor(C_BLACK)
+        self.setLineWidth(3)
+        self.line(0, PAGE_H - 2, PAGE_W, PAGE_H - 2)
+
+        # Fond gris très clair sur toute la zone header
+        self.setFillColor(C_LIGHT)
+        self.rect(0, PAGE_H - 78, PAGE_W, 76, fill=1, stroke=0)
+
+        # Logo (colonne gauche du header)
+        LOGO_X, LOGO_Y, LOGO_W, LOGO_H = ML, PAGE_H - 72, 110, 48
         if self.logo_path and os.path.exists(self.logo_path):
             try:
-                # Logo blanc sur fond coloré
-                self.drawImage(self.logo_path, 40, A4[1] - 45, width=100, height=40, mask='auto', preserveAspectRatio=True)
-            except Exception as e:
-                print(f"Erreur lors du chargement du logo: {e}")
-        
-        # Nom de la banque (blanc sur fond coloré)
-        self.setFillColor(colors.white)
-        font_name = f"{_UNICODE_FONT_NAME}-Bold" if _UNICODE_FONTS_LOADED else "Helvetica-Bold"
-        self.setFont(font_name, 18)
-        self.drawString(160, A4[1] - 35, self.banque_name.upper())
-        
-        # Sous-titre traduit (blanc sur fond coloré)
-        self.setFont(_UNICODE_FONT_NAME if _UNICODE_FONTS_LOADED else "Helvetica", 9)
-        self.setFillColor(colors.Color(0.95, 0.95, 0.95))
-        self.drawString(160, A4[1] - 50, t['dept_operations'])
-        
-        # Date et référence à droite
-        self.setFont(_UNICODE_FONT_NAME if _UNICODE_FONTS_LOADED else "Helvetica", 8)
-        self.drawRightString(A4[0] - 40, A4[1] - 35, datetime.now().strftime('%d/%m/%Y'))
-        self.drawRightString(A4[0] - 40, A4[1] - 50, t['systeme_gestion'])
-    
-    def draw_footer(self):
-        """Dessiner le pied de page professionnel"""
+                self.drawImage(
+                    self.logo_path, LOGO_X, LOGO_Y,
+                    width=LOGO_W, height=LOGO_H,
+                    preserveAspectRatio=True, mask='auto',
+                )
+            except Exception:
+                self._text_logo(LOGO_X, LOGO_Y + LOGO_H // 2)
+        else:
+            self._text_logo(LOGO_X, LOGO_Y + LOGO_H // 2)
+
+        # Titre du document (droite, 2 lignes)
+        self.setFillColor(C_DARK)
+        self.setFont(FONT_BOLD, 11)
+        self.drawRightString(PAGE_W - MR, PAGE_H - 30, self.doc_title)
+
+        self.setFont(FONT, 7.5)
+        self.setFillColor(C_MED)
+        self.drawRightString(PAGE_W - MR, PAGE_H - 43, t['dept_operations'])
+
+        # Filet gris de séparation header / métadonnées
+        self.setStrokeColor(C_BORDER)
+        self.setLineWidth(0.6)
+        self.line(ML, PAGE_H - 80, PAGE_W - MR, PAGE_H - 80)
+
+        # Bande méta : référence à gauche, date à droite
+        self.setFillColor(C_MED)
+        self.setFont(FONT, 8)
+        self.drawString(ML, PAGE_H - 94,
+                        f"{t['reference']} :  {self.ref_num}")
+        self.drawRightString(PAGE_W - MR, PAGE_H - 94,
+                             f"{t['date']} :  {self.doc_date}")
+
+        # Filet fin sous la bande méta
+        self.setLineWidth(0.4)
+        self.line(ML, PAGE_H - 100, PAGE_W - MR, PAGE_H - 100)
+
+    def _text_logo(self, x, y):
+        """Fallback texte si le logo est absent"""
+        self.setFillColor(C_DARK)
+        self.setFont(FONT_BOLD, 13)
+        self.drawString(x, y, self.bank_info.get('name', 'BANK'))
+
+    # ── Pied de page ─────────────────────────────────────────────────
+    def _draw_footer(self):
         t = get_translations(self.langue)
-        
-        # Ligne de séparation
-        self.setStrokeColor(colors.Color(0.8, 0.8, 0.8))
-        self.setLineWidth(1)
-        self.line(30, 80, A4[0] - 30, 80)
-        
-        # Informations de confidentialité traduites
-        self.setFillColor(colors.Color(0.4, 0.4, 0.4))
-        font_name = _UNICODE_FONT_NAME if _UNICODE_FONTS_LOADED else "Helvetica"
-        self.setFont(font_name, 7)
-        confidentiality_text = [
-            t['document_confidentiel'],
-            t['reproduction_interdite'],
+
+        self.setStrokeColor(C_BORDER)
+        self.setLineWidth(0.5)
+        self.line(ML, 58, PAGE_W - MR, 58)
+
+        self.setFont(FONT, 6.5)
+        self.setFillColor(C_MED)
+        self.drawCentredText(PAGE_W / 2, 47, t['document_confidentiel'])
+        self.drawCentredText(PAGE_W / 2, 37, t['reproduction_interdite'])
+
+        gen = datetime.now().strftime('%d/%m/%Y %H:%M')
+        self.drawString(ML, 24, f"{t['document_genere']} {gen}")
+
+        self.setFont(FONT_BOLD, 7)
+        self.setFillColor(C_DARK)
+        self.drawRightString(PAGE_W - MR, 24,
+                             f"{t['page']} {self._pageNumber}")
+
+
+def _decorate(canv, doc):
+    canv.draw_page_decorations()
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Helpers de mise en page
+# ─────────────────────────────────────────────────────────────────────
+def _section_title(text):
+    """Titre de section : fond gris foncé, texte blanc, majuscules"""
+    st = ParagraphStyle(
+        '_ST',
+        fontName=FONT_BOLD, fontSize=8,
+        textColor=C_WHITE, backColor=C_DARK,
+        spaceBefore=12, spaceAfter=0,
+        leftIndent=0, borderPadding=(5, 8, 5, 8),
+        leading=11,
+    )
+    return Paragraph(f'<b>{text.upper()}</b>', st)
+
+
+def _p(text, bold=False, size=9, color=None, align=TA_LEFT):
+    st = ParagraphStyle(
+        '_P',
+        fontName=FONT_BOLD if bold else FONT,
+        fontSize=size,
+        textColor=color or C_BLACK,
+        leading=size + 3,
+        alignment=align,
+    )
+    return Paragraph(str(text), st)
+
+
+def _table(data, col_widths, header_row=False):
+    """Tableau sobre : fond blanc, lignes alternées gris clair, bordures grises."""
+    tbl = Table(data, colWidths=col_widths, repeatRows=1 if header_row else 0)
+    style = [
+        ('FONTNAME',       (0, 0), (-1, -1),  FONT),
+        ('FONTSIZE',       (0, 0), (-1, -1),  9),
+        ('TEXTCOLOR',      (0, 0), (-1, -1),  C_BLACK),
+        ('ALIGN',          (0, 0), (-1, -1),  'LEFT'),
+        ('VALIGN',         (0, 0), (-1, -1),  'MIDDLE'),
+        ('LEFTPADDING',    (0, 0), (-1, -1),  8),
+        ('RIGHTPADDING',   (0, 0), (-1, -1),  8),
+        ('TOPPADDING',     (0, 0), (-1, -1),  6),
+        ('BOTTOMPADDING',  (0, 0), (-1, -1),  6),
+        ('ROWBACKGROUNDS', (0, 0), (-1, -1),  [C_WHITE, C_LIGHT]),
+        ('GRID',           (0, 0), (-1, -1),  0.5, C_BORDER),
+    ]
+    if header_row:
+        style += [
+            ('BACKGROUND', (0, 0), (-1, 0), C_DARK),
+            ('TEXTCOLOR',  (0, 0), (-1, 0), C_WHITE),
+            ('FONTNAME',   (0, 0), (-1, 0), FONT_BOLD),
+            ('FONTSIZE',   (0, 0), (-1, 0), 8.5),
         ]
-        
-        y_pos = 65
-        for line in confidentiality_text:
-            self.drawCentredText(A4[0] / 2, y_pos, line)
-            y_pos -= 9
-        
-        # Numéro de page traduit
-        self.setFont(f"{font_name}-Bold" if _UNICODE_FONTS_LOADED else "Helvetica-Bold", 8)
-        bank_color = hex_to_color(self.bank_info.get('primary_color', '#0066CC'))
-        self.setFillColor(bank_color)
-        self.drawRightString(A4[0] - 40, 25, f"{t['page']} {self._pageNumber}")
+    tbl.setStyle(TableStyle(style))
+    return tbl
 
-def draw_first_page(canvas, doc):
-    """Dessiner la première page"""
-    if hasattr(canvas, 'draw_watermark'):
-        canvas.draw_watermark()
-        canvas.draw_header()
-        canvas.draw_footer()
 
-def draw_later_pages(canvas, doc):
-    """Dessiner les pages suivantes"""
-    if hasattr(canvas, 'draw_watermark'):
-        canvas.draw_watermark()
-        canvas.draw_header()
-        canvas.draw_footer()
-
+# ─────────────────────────────────────────────────────────────────────
+# PDF — Initiation de virement
+# ─────────────────────────────────────────────────────────────────────
 def generer_pdf_initiation(virement):
-    """Générer le PDF professionnel d'initiation de virement"""
-    # Créer le dossier s'il n'existe pas
     pdf_dir = os.path.join(settings.MEDIA_ROOT, 'pdfs', 'initiations')
     os.makedirs(pdf_dir, exist_ok=True)
-    
-    # Nom du fichier
-    filename = f'ordre_virement_{str(virement.id)[:8]}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+    filename = (f'ordre_virement_{str(virement.id)[:8]}_'
+                f'{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf')
     filepath = os.path.join(pdf_dir, filename)
-    
-    # Récupérer les informations de la banque
+
     bank_info = get_bank_info(virement.banque_emettrice)
     logo_path = get_logo_path(virement.banque_emettrice)
-    banque_name = bank_info['name']
-    
-    # Créer le document PDF avec canvas personnalisé
+    t         = get_translations(virement.langue)
+    ref       = str(virement.id)[:8].upper()
+    date_str  = virement.date_creation.strftime('%d/%m/%Y')
+
     def make_canvas(*args, **kwargs):
-        return BankDocumentCanvas(*args, **kwargs, logo_path=logo_path, banque_name=banque_name, bank_info=bank_info, langue=virement.langue)
-    
+        return BankCanvas(
+            *args, **kwargs,
+            logo_path=logo_path, bank_info=bank_info,
+            doc_title=t['titre_initiation'],
+            ref_num=ref, doc_date=date_str,
+            langue=virement.langue,
+        )
+
     doc = SimpleDocTemplate(
-        filepath, 
-        pagesize=A4,
-        topMargin=120,
-        bottomMargin=100,
-        leftMargin=40,
-        rightMargin=40,
-        canvasmaker=make_canvas
+        filepath, pagesize=A4,
+        topMargin=112, bottomMargin=72,
+        leftMargin=ML, rightMargin=MR,
+        canvasmaker=make_canvas,
     )
-    
-    # Styles professionnels avec polices Unicode
-    styles = getSampleStyleSheet()
-    bank_color = hex_to_color(bank_info.get('primary_color', '#0066CC'))
-    
-    # Style de titre professionnel
-    title_style = ParagraphStyle(
-        'BankTitle',
-        parent=styles['Title'],
-        fontSize=20,
-        textColor=bank_color,
-        spaceAfter=30,
-        spaceBefore=15,
-        alignment=TA_CENTER,
-        fontName=f"{_UNICODE_FONT_NAME}-Bold" if _UNICODE_FONTS_LOADED else 'Helvetica-Bold',
-        borderWidth=3,
-        borderColor=bank_color,
-        borderPadding=20,
-        backColor=colors.Color(0.98, 0.99, 1.0),
-        leading=24
-    )
-    
-    # Style de section
-    section_style = ParagraphStyle(
-        'SectionHeader',
-        parent=styles['Heading2'],
-        fontSize=13,
-        textColor=bank_color,
-        spaceAfter=18,
-        spaceBefore=25,
-        alignment=TA_LEFT,
-        fontName=f"{_UNICODE_FONT_NAME}-Bold" if _UNICODE_FONTS_LOADED else 'Helvetica-Bold',
-        backColor=colors.Color(0.97, 0.98, 1.0),
-        borderWidth=2,
-        borderColor=bank_color,
-        leftIndent=12,
-        borderPadding=10,
-        leading=16
-    )
-    
-    # Style normal avec Unicode
-    normal_style = ParagraphStyle(
-        'BankNormal',
-        parent=styles['Normal'],
-        fontSize=11,
-        textColor=colors.Color(0.1, 0.1, 0.1),
-        spaceAfter=8,
-        fontName=_UNICODE_FONT_NAME if _UNICODE_FONTS_LOADED else 'Helvetica',
-        leading=15
-    )
-    
+
+    # ── Montant en lettres ─────────────────────────────────────────
+    try:
+        montant_lettres = number_to_words(float(virement.montant), virement.langue)
+        devise_label = dict(virement.DEVISES_CHOICES).get(virement.devise, virement.devise)
+        montant_lettres = f"{montant_lettres} {devise_label}"
+    except Exception:
+        montant_lettres = ''
+
     story = []
-    
-    # Récupérer les traductions
-    t = get_translations(virement.langue)
-    
-    # Titre principal
-    story.append(Paragraph(t['titre_initiation'], title_style))
-    story.append(Spacer(1, 20))
-    
-    # Numéro de référence en évidence
-    ref_data = [
-        ['', ''],
-        [Paragraph(f"<b>{t['reference']} :</b>", normal_style), 
-         Paragraph(f"<b>{str(virement.id)[:8].upper()}</b>", normal_style)],
-        [Paragraph(f"<b>{t['date']} :</b>", normal_style), 
-         Paragraph(f"<b>{virement.date_creation.strftime('%d/%m/%Y - %H:%M')}</b>", normal_style)],
-        [Paragraph(f"<b>{t['banque']} :</b>", normal_style), 
-         Paragraph(f"<b>{banque_name}</b>", normal_style)],
-        ['', '']
-    ]
-    
-    ref_table = Table(ref_data, colWidths=[6*cm, 10*cm])
-    ref_font = f"{_UNICODE_FONT_NAME}-Bold" if _UNICODE_FONTS_LOADED else 'Helvetica-Bold'
-    ref_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 1), (-1, 3), colors.Color(0.97, 0.99, 1.0)),
-        ('GRID', (0, 1), (-1, 3), 1.5, bank_color),
-        ('LINEBELOW', (0, 0), (-1, 0), 0, colors.white),
-        ('LINEABOVE', (0, -1), (-1, -1), 0, colors.white),
-        ('FONTNAME', (0, 1), (-1, 3), ref_font),
-        ('FONTSIZE', (0, 1), (-1, 3), 12),
-        ('ALIGN', (0, 1), (-1, 3), 'LEFT'),
-        ('VALIGN', (0, 1), (-1, 3), 'MIDDLE'),
-        ('LEFTPADDING', (0, 1), (-1, 3), 18),
-        ('RIGHTPADDING', (0, 1), (-1, 3), 18),
-        ('TOPPADDING', (0, 1), (-1, 3), 12),
-        ('BOTTOMPADDING', (0, 1), (-1, 3), 12),
-        ('TEXTCOLOR', (0, 1), (0, 3), bank_color),
+
+    # ── Section 1 : Établissement & référence ─────────────────────
+    story.append(_section_title(t['details_operation']))
+    story.append(_table(
+        [
+            [_p(t['banque'] + ' :', bold=True), _p(bank_info['name']),
+             _p(t['reference'] + ' :', bold=True), _p(ref)],
+            [_p(t['date'] + ' :', bold=True),
+             _p(virement.date_creation.strftime('%d/%m/%Y — %H:%M')),
+             _p(t['statut'] + ' :', bold=True),
+             _p(t['statut_traitement'])],
+        ],
+        col_widths=[3.8*cm, 6.5*cm, 3.8*cm, 5.4*cm],
+    ))
+    story.append(Spacer(1, 10))
+
+    # ── Section 2 : Parties ────────────────────────────────────────
+    story.append(_section_title(t['informations_parties']))
+
+    half = CW / 2 - 3
+    parties = _table(
+        [
+            # En-têtes
+            [_p(t['donneur_ordre'], bold=True, color=C_WHITE),
+             _p(t['beneficiaire'],  bold=True, color=C_WHITE)],
+            # Noms
+            [_p(virement.donneur_ordre_nom_complet, bold=True),
+             _p(virement.beneficiaire_nom_complet,  bold=True)],
+            # Comptes
+            [_p(t['compte'] + ' :'),
+             _p(t['compte'] + ' :')],
+            [_p(virement.donneur_ordre_compte, size=8.5),
+             _p(virement.beneficiaire_compte,  size=8.5)],
+            # BIC / Email
+            [_p(t['email'] + ' :'),
+             _p(t['bic']   + ' :')],
+            [_p(virement.beneficiaire_email, size=8.5),
+             _p(virement.numero_bic,         size=8.5)],
+        ],
+        col_widths=[half, half],
+        header_row=True,
+    )
+    story.append(parties)
+    story.append(Spacer(1, 10))
+
+    # ── Section 3 : Montant ────────────────────────────────────────
+    story.append(_section_title(t['montant_virement']))
+
+    montant_fmt = f"{virement.montant:,.2f} {virement.devise}"
+    amount_style = ParagraphStyle(
+        '_AMT',
+        fontName=FONT_BOLD, fontSize=18,
+        textColor=C_BLACK, alignment=TA_CENTER, leading=22,
+    )
+    words_style = ParagraphStyle(
+        '_WRD',
+        fontName=FONT, fontSize=8,
+        textColor=C_MED, alignment=TA_CENTER, leading=11,
+        spaceBefore=2,
+    )
+
+    tbl_amount = Table(
+        [[Paragraph(montant_fmt, amount_style)],
+         [Paragraph(montant_lettres, words_style)]],
+        colWidths=[CW],
+    )
+    tbl_amount.setStyle(TableStyle([
+        ('ALIGN',          (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN',         (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING',     (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING',  (0, 0), (-1, -1), 10),
+        ('LEFTPADDING',    (0, 0), (-1, -1), 10),
+        ('RIGHTPADDING',   (0, 0), (-1, -1), 10),
+        ('BOX',            (0, 0), (-1, -1), 1, C_BORDER),
+        ('BACKGROUND',     (0, 0), (-1, -1), C_WHITE),
+        ('LINEBELOW',      (0, 0), (-1, 0),  0.4, C_BORDER),
     ]))
-    
-    story.append(ref_table)
-    story.append(Spacer(1, 25))
-    
-    # Section informations des parties
-    story.append(Paragraph(t['informations_parties'], section_style))
-    
-    # Tableau des parties
-    parties_data = [
-        [Paragraph(f"<b>{t['beneficiaire']}</b>", normal_style), 
-         Paragraph(f"<b>{t['donneur_ordre']}</b>", normal_style)],
-        [Paragraph(f"{virement.beneficiaire_nom_complet}", normal_style),
-         Paragraph(f"{virement.donneur_ordre_nom_complet}", normal_style)],
-        [Paragraph(f"<i>{t['compte']} :</i><br/>{virement.beneficiaire_compte}", normal_style),
-         Paragraph(f"<i>{t['compte']} :</i><br/>{virement.donneur_ordre_compte}", normal_style)],
-        [Paragraph(f"<i>{t['bic']} :</i><br/>{virement.numero_bic}", normal_style),
-         Paragraph(f"<i>{t['email']} :</i><br/>{virement.beneficiaire_email}", normal_style)]
-    ]
-    
-    parties_table = Table(parties_data, colWidths=[8*cm, 8*cm])
-    parties_font = f"{_UNICODE_FONT_NAME}-Bold" if _UNICODE_FONTS_LOADED else 'Helvetica-Bold'
-    parties_font_normal = _UNICODE_FONT_NAME if _UNICODE_FONTS_LOADED else 'Helvetica'
-    parties_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), bank_color),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('FONTNAME', (0, 0), (-1, 0), parties_font),
-        ('FONTSIZE', (0, 0), (-1, 0), 13),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.Color(0.99, 0.99, 1.0)),
-        ('GRID', (0, 0), (-1, -1), 1.5, bank_color),
-        ('FONTNAME', (0, 1), (-1, -1), parties_font_normal),
-        ('FONTSIZE', (0, 1), (-1, -1), 11),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 15),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 15),
-        ('TOPPADDING', (0, 0), (-1, -1), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.Color(0.98, 0.99, 1.0)]),
+    story.append(tbl_amount)
+    story.append(Spacer(1, 14))
+
+    # ── Section 4 : Signatures ─────────────────────────────────────
+    story.append(_section_title(t['signature_cachet']))
+
+    sig_label_style = ParagraphStyle(
+        '_SL', fontName=FONT, fontSize=8,
+        textColor=C_MED, leading=11,
+    )
+    sig_line_style = ParagraphStyle(
+        '_SLN', fontName=FONT, fontSize=9,
+        textColor=C_LIGHT, leading=20,
+    )
+    half_sig = CW / 2 - 3
+
+    def sig_cell(label):
+        return [
+            Paragraph(label, sig_label_style),
+            Spacer(1, 22),
+            Paragraph('_' * 42, sig_line_style),
+        ]
+
+    sig_tbl = Table(
+        [[sig_cell(t['donneur_ordre_label']),
+          sig_cell(t['visa_banque'])]],
+        colWidths=[half_sig, half_sig],
+    )
+    sig_tbl.setStyle(TableStyle([
+        ('VALIGN',        (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING',   (0, 0), (-1, -1), 10),
+        ('RIGHTPADDING',  (0, 0), (-1, -1), 10),
+        ('TOPPADDING',    (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('BOX',           (0, 0), (-1, -1), 0.5, C_BORDER),
+        ('LINEBEFORE',    (1, 0), (1, -1),  0.5, C_BORDER),
+        ('BACKGROUND',    (0, 0), (-1, -1), C_WHITE),
     ]))
-    
-    story.append(parties_table)
-    story.append(Spacer(1, 25))
-    
-    # Section détails de l'opération
-    story.append(Paragraph(t['details_operation'], section_style))
-    
-    # Montant en évidence
-    montant_data = [
-        [Paragraph(f"<b>{t['montant']} {t['a_transferer']}</b>", normal_style), 
-         Paragraph(f"<font size=16><b>{virement.montant:,.2f} {virement.devise}</b></font>", normal_style)],
-        [Paragraph(f"<i>{t['en_lettres']} :</i>", normal_style),
-         Paragraph(f"<i>{number_to_words(float(virement.montant), virement.langue)} {dict(virement.DEVISES_CHOICES)[virement.devise]}</i>", normal_style)]
-    ]
-    
-    montant_table = Table(montant_data, colWidths=[6*cm, 10*cm])
-    montant_font = f"{_UNICODE_FONT_NAME}-Bold" if _UNICODE_FONTS_LOADED else 'Helvetica-Bold'
-    montant_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, -1), colors.Color(0.95, 1.0, 0.95)),
-        ('GRID', (0, 0), (-1, -1), 2.5, colors.Color(0.0, 0.7, 0.0)),
-        ('FONTNAME', (0, 0), (0, -1), montant_font),
-        ('FONTNAME', (1, 0), (1, 0), montant_font),
-        ('FONTSIZE', (1, 0), (1, 0), 18),
-        ('TEXTCOLOR', (1, 0), (1, 0), colors.Color(0.0, 0.5, 0.0)),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 18),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 18),
-        ('TOPPADDING', (0, 0), (-1, -1), 15),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
-    ]))
-    
-    story.append(montant_table)
-    story.append(Spacer(1, 30))
-    
-    # Construire le PDF
-    doc.build(story, onFirstPage=draw_first_page, onLaterPages=draw_later_pages)
-    
+    story.append(sig_tbl)
+
+    doc.build(story, onFirstPage=_decorate, onLaterPages=_decorate)
     return f'pdfs/initiations/{filename}'
 
+
+# ─────────────────────────────────────────────────────────────────────
+# PDF — Rejet de virement
+# ─────────────────────────────────────────────────────────────────────
 def generer_pdf_rejet(rejet):
-    """Générer le PDF professionnel de rejet de virement"""
     virement = rejet.virement
-    
-    # Créer le dossier s'il n'existe pas
+
     pdf_dir = os.path.join(settings.MEDIA_ROOT, 'pdfs', 'rejets')
     os.makedirs(pdf_dir, exist_ok=True)
-    
-    # Nom du fichier
-    filename = f'avis_rejet_{str(virement.id)[:8]}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+    filename = (f'avis_rejet_{str(virement.id)[:8]}_'
+                f'{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf')
     filepath = os.path.join(pdf_dir, filename)
-    
-    # Récupérer les informations de la banque
+
     bank_info = get_bank_info(virement.banque_emettrice)
     logo_path = get_logo_path(virement.banque_emettrice)
-    banque_name = bank_info['name']
-    
-    # Créer le document PDF avec canvas personnalisé
+    t         = get_translations(virement.langue)
+    ref       = str(virement.id)[:8].upper()
+    date_str  = rejet.date_rejet.strftime('%d/%m/%Y')
+
     def make_canvas(*args, **kwargs):
-        return BankDocumentCanvas(*args, **kwargs, logo_path=logo_path, banque_name=banque_name, bank_info=bank_info, langue=virement.langue)
-    
+        return BankCanvas(
+            *args, **kwargs,
+            logo_path=logo_path, bank_info=bank_info,
+            doc_title=t['titre_rejet'],
+            ref_num=ref, doc_date=date_str,
+            langue=virement.langue,
+        )
+
     doc = SimpleDocTemplate(
-        filepath, 
-        pagesize=A4,
-        topMargin=120,
-        bottomMargin=100,
-        leftMargin=40,
-        rightMargin=40,
-        canvasmaker=make_canvas
+        filepath, pagesize=A4,
+        topMargin=112, bottomMargin=72,
+        leftMargin=ML, rightMargin=MR,
+        canvasmaker=make_canvas,
     )
-    
-    # Styles (couleurs différentes pour le rejet)
-    styles = getSampleStyleSheet()
-    reject_color = colors.Color(0.8, 0.2, 0.2)
-    
-    title_style = ParagraphStyle(
-        'RejectTitle',
-        parent=styles['Title'],
-        fontSize=20,
-        textColor=reject_color,
-        spaceAfter=30,
-        spaceBefore=15,
-        alignment=TA_CENTER,
-        fontName=f"{_UNICODE_FONT_NAME}-Bold" if _UNICODE_FONTS_LOADED else 'Helvetica-Bold',
-        borderWidth=3,
-        borderColor=reject_color,
-        borderPadding=20,
-        backColor=colors.Color(1.0, 0.97, 0.97),
-        leading=24
-    )
-    
-    section_style = ParagraphStyle(
-        'RejectSection',
-        parent=styles['Heading2'],
-        fontSize=13,
-        textColor=reject_color,
-        spaceAfter=18,
-        spaceBefore=25,
-        alignment=TA_LEFT,
-        fontName=f"{_UNICODE_FONT_NAME}-Bold" if _UNICODE_FONTS_LOADED else 'Helvetica-Bold',
-        backColor=colors.Color(1.0, 0.99, 0.99),
-        borderWidth=2,
-        borderColor=reject_color,
-        leftIndent=12,
-        borderPadding=10,
-        leading=16
-    )
-    
-    normal_style = ParagraphStyle(
-        'BankNormal',
-        parent=styles['Normal'],
-        fontSize=11,
-        textColor=colors.Color(0.1, 0.1, 0.1),
-        spaceAfter=8,
-        fontName=_UNICODE_FONT_NAME if _UNICODE_FONTS_LOADED else 'Helvetica',
-        leading=15
-    )
-    
+
     story = []
-    
-    # Récupérer les traductions
-    t = get_translations(virement.langue)
-    
-    # Titre principal
-    story.append(Paragraph(t['titre_rejet'], title_style))
-    story.append(Spacer(1, 20))
-    
-    # Informations de base
-    ref_data = [
-        ['', ''],
-        [Paragraph(f"<b>{t['reference']} :</b>", normal_style), 
-         Paragraph(f"<b>{str(virement.id)[:8].upper()}</b>", normal_style)],
-        [Paragraph(f"<b>{t['date_rejet']} :</b>", normal_style), 
-         Paragraph(f"<b>{rejet.date_rejet.strftime('%d/%m/%Y - %H:%M')}</b>", normal_style)],
-        [Paragraph(f"<b>{t['statut']} :</b>", normal_style), 
-         Paragraph(f"<b><font color='red'>{t['rejete']}</font></b>", normal_style)],
-        ['', '']
-    ]
-    
-    ref_table = Table(ref_data, colWidths=[6*cm, 10*cm])
-    ref_font = f"{_UNICODE_FONT_NAME}-Bold" if _UNICODE_FONTS_LOADED else 'Helvetica-Bold'
-    ref_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 1), (-1, 3), colors.Color(1.0, 0.97, 0.97)),
-        ('GRID', (0, 1), (-1, 3), 1.5, reject_color),
-        ('FONTNAME', (0, 1), (-1, 3), ref_font),
-        ('FONTSIZE', (0, 1), (-1, 3), 12),
-        ('ALIGN', (0, 1), (-1, 3), 'LEFT'),
-        ('VALIGN', (0, 1), (-1, 3), 'MIDDLE'),
-        ('LEFTPADDING', (0, 1), (-1, 3), 18),
-        ('RIGHTPADDING', (0, 1), (-1, 3), 18),
-        ('TOPPADDING', (0, 1), (-1, 3), 12),
-        ('BOTTOMPADDING', (0, 1), (-1, 3), 12),
-        ('TEXTCOLOR', (0, 1), (0, 3), reject_color),
+
+    # ── Section 1 : Références ─────────────────────────────────────
+    story.append(_section_title(t['details_operation']))
+    story.append(_table(
+        [
+            [_p(t['banque']      + ' :', bold=True), _p(bank_info['name']),
+             _p(t['reference']   + ' :', bold=True), _p(ref)],
+            [_p(t['date_rejet']  + ' :', bold=True),
+             _p(rejet.date_rejet.strftime('%d/%m/%Y — %H:%M')),
+             _p(t['statut']      + ' :', bold=True),
+             _p(t['rejete'], bold=True)],
+        ],
+        col_widths=[3.8*cm, 6.5*cm, 3.8*cm, 5.4*cm],
+    ))
+    story.append(Spacer(1, 10))
+
+    # ── Section 2 : Avis important ────────────────────────────────
+    story.append(_section_title(t['avis_important']))
+    story.append(_table(
+        [[_p(t['msg_rejet'], size=9)]],
+        col_widths=[CW],
+    ))
+    story.append(Spacer(1, 10))
+
+    # ── Section 3 : Détails du rejet ──────────────────────────────
+    story.append(_section_title(t['informations_parties']))
+    story.append(_table(
+        [
+            [_p(t['beneficiaire_concerne'] + ' :', bold=True),
+             _p(virement.beneficiaire_nom_complet, bold=True)],
+            [_p(t['compte_beneficiaire']   + ' :', bold=True),
+             _p(virement.beneficiaire_compte)],
+            [_p(t['donneur_ordre']         + ' :', bold=True),
+             _p(virement.donneur_ordre_nom_complet)],
+        ],
+        col_widths=[5.5*cm, CW - 5.5*cm],
+    ))
+    story.append(Spacer(1, 10))
+
+    # ── Section 4 : Montant & frais ───────────────────────────────
+    story.append(_section_title(t['details_operation'] + ' — ' + t['frais']))
+    story.append(_table(
+        [
+            [_p(t['montant_initial'] + ' :', bold=True),
+             _p(f"{virement.montant:,.2f} {virement.devise}", bold=True)],
+            [_p(t['frais']           + ' :', bold=True),
+             _p(f"{rejet.frais_redirection:,.2f} {virement.devise}", bold=True)],
+            [_p(t['motif']           + ' :', bold=True),
+             _p(rejet.motif_rejet)],
+        ],
+        col_widths=[5.5*cm, CW - 5.5*cm],
+    ))
+    story.append(Spacer(1, 14))
+
+    # ── Section 5 : Signatures ────────────────────────────────────
+    story.append(_section_title(t['signature_cachet']))
+
+    sig_label_style = ParagraphStyle(
+        '_SL2', fontName=FONT, fontSize=8,
+        textColor=C_MED, leading=11,
+    )
+    sig_line_style = ParagraphStyle(
+        '_SLN2', fontName=FONT, fontSize=9,
+        textColor=C_LIGHT, leading=20,
+    )
+    half_sig = CW / 2 - 3
+
+    def sig_cell(label):
+        return [
+            Paragraph(label, sig_label_style),
+            Spacer(1, 22),
+            Paragraph('_' * 42, sig_line_style),
+        ]
+
+    sig_tbl = Table(
+        [[sig_cell(t['donneur_ordre_label']),
+          sig_cell(t['visa_banque'])]],
+        colWidths=[half_sig, half_sig],
+    )
+    sig_tbl.setStyle(TableStyle([
+        ('VALIGN',        (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING',   (0, 0), (-1, -1), 10),
+        ('RIGHTPADDING',  (0, 0), (-1, -1), 10),
+        ('TOPPADDING',    (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('BOX',           (0, 0), (-1, -1), 0.5, C_BORDER),
+        ('LINEBEFORE',    (1, 0), (1, -1),  0.5, C_BORDER),
+        ('BACKGROUND',    (0, 0), (-1, -1), C_WHITE),
     ]))
-    
-    story.append(ref_table)
-    story.append(Spacer(1, 20))
-    
-    # Message d'avis important
-    story.append(Paragraph(t['avis_important'], section_style))
-    story.append(Paragraph(t['msg_rejet'], normal_style))
-    story.append(Spacer(1, 20))
-    
-    # Détails du rejet
-    rejet_data = [
-        [Paragraph(f"<b>{t['montant_initial']} :</b>", normal_style), 
-         Paragraph(f"{virement.montant:,.2f} {virement.devise}", normal_style)],
-        [Paragraph(f"<b>{t['frais']} :</b>", normal_style),
-         Paragraph(f"<font color='red'><b>{rejet.frais_redirection:,.2f} {virement.devise}</b></font>", normal_style)],
-        [Paragraph(f"<b>{t['motif']} :</b>", normal_style),
-         Paragraph(f"{rejet.motif_rejet}", normal_style)]
-    ]
-    
-    rejet_table = Table(rejet_data, colWidths=[6*cm, 10*cm])
-    rejet_font = f"{_UNICODE_FONT_NAME}-Bold" if _UNICODE_FONTS_LOADED else 'Helvetica-Bold'
-    rejet_font_normal = _UNICODE_FONT_NAME if _UNICODE_FONTS_LOADED else 'Helvetica'
-    rejet_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, -1), colors.Color(1.0, 0.99, 0.98)),
-        ('GRID', (0, 0), (-1, -1), 1.5, reject_color),
-        ('FONTNAME', (0, 0), (0, -1), rejet_font),
-        ('FONTNAME', (1, 0), (-1, -1), rejet_font_normal),
-        ('FONTSIZE', (0, 0), (0, -1), 12),
-        ('FONTSIZE', (1, 0), (-1, -1), 11),
-        ('TEXTCOLOR', (0, 0), (0, -1), reject_color),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 18),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 18),
-        ('TOPPADDING', (0, 0), (-1, -1), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
-    ]))
-    
-    story.append(rejet_table)
-    story.append(Spacer(1, 30))
-    
-    # Informations des parties (version condensée pour le rejet)
-    parties_data = [
-        [Paragraph(f"<b>{t['beneficiaire_concerne']} :</b>", normal_style), 
-         Paragraph(f"{virement.beneficiaire_nom_complet}", normal_style)],
-        [Paragraph(f"<b>{t['compte_beneficiaire']} :</b>", normal_style),
-         Paragraph(f"{virement.beneficiaire_compte}", normal_style)],
-        [Paragraph(f"<b>{t['donneur_ordre']} :</b>", normal_style),
-         Paragraph(f"{virement.donneur_ordre_nom_complet}", normal_style)]
-    ]
-    
-    parties_table = Table(parties_data, colWidths=[6*cm, 10*cm])
-    parties_font = f"{_UNICODE_FONT_NAME}-Bold" if _UNICODE_FONTS_LOADED else 'Helvetica-Bold'
-    parties_font_normal = _UNICODE_FONT_NAME if _UNICODE_FONTS_LOADED else 'Helvetica'
-    parties_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, -1), colors.Color(0.99, 0.99, 0.99)),
-        ('GRID', (0, 0), (-1, -1), 1.5, colors.Color(0.9, 0.9, 0.9)),
-        ('FONTNAME', (0, 0), (0, -1), parties_font),
-        ('FONTNAME', (1, 0), (-1, -1), parties_font_normal),
-        ('FONTSIZE', (0, 0), (0, -1), 12),
-        ('FONTSIZE', (1, 0), (-1, -1), 11),
-        ('TEXTCOLOR', (0, 0), (0, -1), reject_color),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 15),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 15),
-        ('TOPPADDING', (0, 0), (-1, -1), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
-    ]))
-    
-    story.append(parties_table)
-    story.append(Spacer(1, 30))
-    
-    # Construire le PDF
-    doc.build(story, onFirstPage=draw_first_page, onLaterPages=draw_later_pages)
-    
+    story.append(sig_tbl)
+
+    doc.build(story, onFirstPage=_decorate, onLaterPages=_decorate)
     return f'pdfs/rejets/{filename}'
