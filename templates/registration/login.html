@@ -3,109 +3,385 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion - BOITE-VIRO</title>
-    
-    <!-- Bootstrap 5 CSS -->
+    <title>Connexion — BOITE-VIRO</title>
+
+    <!-- SEO & Open Graph (image partagée sur réseaux sociaux) -->
+    <meta name="description" content="Plateforme professionnelle de gestion des virements bancaires internationaux.">
+    <meta property="og:title" content="BOITE-VIRO — Gestion de virements bancaires">
+    <meta property="og:description" content="Plateforme professionnelle de gestion des virements bancaires internationaux.">
+    <meta property="og:image" content="https://banque.meilleurtaux.com/images/actu/2018-0418_virement-bancaire.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://banque.meilleurtaux.com/images/actu/2018-0418_virement-bancaire.jpg">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/jpeg" href="https://img.freepik.com/vecteurs-premium/journee-internationale-banques-illustration-du-logo-vectoriel-banniere-affiche-medias-sociaux-fond-blanc_1262453-3977.jpg?semt=ais_hybrid&w=740&q=80">
+
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
+            background: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* ═══════════════════════ LEFT PANEL ═══════════════════════ */
+        .panel-left {
+            width: 44%;
+            background: #0d2b5e;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
+            padding: 3rem 2.5rem;
         }
-        .login-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+
+        .brand-logo {
+            width: 72px;
+            height: 72px;
+            background: #f5c518;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.2rem;
         }
-        .login-header {
-            background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
-            color: white;
-            border-radius: 20px 20px 0 0;
-            padding: 2rem;
+
+        .brand-logo i {
+            font-size: 1.8rem;
+            color: #0d2b5e;
+        }
+
+        .brand-name {
+            font-size: 1.9rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 4px;
             text-align: center;
         }
-        .btn-login {
-            background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
-            border: none;
-            padding: 12px 30px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
+
+        .yellow-bar {
+            width: 36px;
+            height: 3px;
+            background: #f5c518;
+            margin: 0.9rem auto 0.8rem;
+            border-radius: 2px;
         }
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(13, 110, 253, 0.3);
+
+        .brand-desc {
+            color: rgba(255,255,255,0.55);
+            font-size: 0.82rem;
+            text-align: center;
+            line-height: 1.7;
+            margin-bottom: 2.8rem;
+        }
+
+        .banks-title {
+            color: rgba(255,255,255,0.3);
+            font-size: 0.66rem;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 0.9rem;
+        }
+
+        .banks-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .bank-item {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.09);
+            border-radius: 8px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 0.5rem;
+            transition: background 0.2s;
+        }
+
+        .bank-item:hover {
+            background: rgba(255,255,255,0.12);
+        }
+
+        .bank-item img {
+            max-width: 100%;
+            max-height: 22px;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+            opacity: 0.6;
+        }
+
+        /* ═══════════════════════ RIGHT PANEL ═══════════════════════ */
+        .panel-right {
+            width: 56%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 3rem 4.5rem;
+            background: #ffffff;
+        }
+
+        .form-wrap {
+            max-width: 380px;
+            width: 100%;
+        }
+
+        .login-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #0d2b5e;
+            margin-bottom: 0.3rem;
+        }
+
+        .login-sub {
+            font-size: 0.87rem;
+            color: #9aa0ac;
+            margin-bottom: 2rem;
+        }
+
+        .field-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #3d4a5c;
+            margin-bottom: 0.4rem;
+            display: block;
+        }
+
+        .field-wrap {
+            display: flex;
+            align-items: stretch;
+            border: 1.5px solid #dde1e8;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            margin-bottom: 1.3rem;
+        }
+
+        .field-wrap:focus-within {
+            border-color: #0d2b5e;
+            box-shadow: 0 0 0 3px rgba(13,43,94,0.08);
+        }
+
+        .field-icon {
+            padding: 0 0.9rem;
+            background: #f8f9fb;
+            border-right: 1.5px solid #dde1e8;
+            display: flex;
+            align-items: center;
+            color: #b0b8c5;
+            font-size: 0.82rem;
+            transition: color 0.2s, border-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .field-wrap:focus-within .field-icon {
+            border-right-color: #0d2b5e;
+            color: #0d2b5e;
+        }
+
+        .field-input {
+            border: none;
+            outline: none;
+            padding: 0 0.9rem;
+            height: 46px;
+            width: 100%;
+            font-size: 0.9rem;
+            color: #2d3748;
+            background: transparent;
+        }
+
+        .field-input::placeholder {
+            color: #c8cfd8;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 0.85rem;
+            background: #f5c518;
+            color: #0d2b5e;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.92rem;
+            cursor: pointer;
+            margin-top: 0.3rem;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+        }
+
+        .btn-submit:hover {
+            background: #e6b500;
+            transform: translateY(-1px);
+            box-shadow: 0 5px 16px rgba(245,197,24,0.4);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        .alert-error {
+            background: #fff5f5;
+            border: 1px solid #ffc4c4;
+            color: #c0392b;
+            border-radius: 8px;
+            padding: 0.65rem 0.9rem;
+            font-size: 0.84rem;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .secure-note {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #9aa0ac;
+            font-size: 0.77rem;
+            margin-top: 1.4rem;
+            padding-top: 1.4rem;
+            border-top: 1px solid #f0f2f5;
+        }
+
+        .secure-note i { color: #28c76f; }
+
+        .footer-note {
+            position: absolute;
+            bottom: 2rem;
+            color: #c8cfd8;
+            font-size: 0.74rem;
+        }
+
+        /* ═══════════════════════ RESPONSIVE ═══════════════════════ */
+        @media (max-width: 900px) {
+            .panel-right { padding: 3rem 3rem; }
+        }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+
+            .panel-left {
+                width: 100%;
+                min-height: auto;
+                padding: 2.5rem 1.5rem;
+            }
+
+            .banks-grid { grid-template-columns: repeat(4, 1fr); }
+
+            .panel-right {
+                width: 100%;
+                min-height: auto;
+                padding: 2.5rem 1.5rem 4rem;
+                position: relative;
+            }
+
+            .form-wrap { max-width: 100%; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                <div class="card login-card border-0">
-                    <div class="login-header">
-                        <i class="fas fa-university fa-3x mb-3"></i>
-                        <h2 class="mb-0">BOITE-VIRO</h2>
-                        <p class="mb-0">Système de gestion des virements</p>
-                    </div>
-                    <div class="card-body p-4">
-                        {% if form.errors %}
-                        <div class="alert alert-danger" role="alert">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            Nom d'utilisateur ou mot de passe incorrect.
-                        </div>
-                        {% endif %}
-                        
-                        <form method="post">
-                            {% csrf_token %}
-                            
-                            <div class="form-floating mb-3">
-                                <input type="text" class="form-control" id="id_username" name="username" placeholder="Nom d'utilisateur" required>
-                                <label for="id_username">
-                                    <i class="fas fa-user me-2"></i>Nom d'utilisateur
-                                </label>
-                            </div>
-                            
-                            <div class="form-floating mb-4">
-                                <input type="password" class="form-control" id="id_password" name="password" placeholder="Mot de passe" required>
-                                <label for="id_password">
-                                    <i class="fas fa-lock me-2"></i>Mot de passe
-                                </label>
-                            </div>
-                            
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-login btn-primary text-white">
-                                    <i class="fas fa-sign-in-alt me-2"></i>Se connecter
-                                </button>
-                            </div>
-                        </form>
-                        
-                        <hr class="my-4">
-                        
-                        <div class="text-center">
-                            <small class="text-muted">
-                                <i class="fas fa-info-circle me-1"></i>
-                                Pas de compte ? Contactez l'administrateur pour créer un compte.
-                            </small>
-                        </div>
-                    </div>
-                    <div class="card-footer text-center bg-transparent border-0">
-                        <small class="text-muted">&copy; 2024 BOITE-VIRO - Tous droits réservés</small>
-                    </div>
-                </div>
+
+    <!-- ═══════════════════════ LEFT PANEL ═══════════════════════ -->
+    <div class="panel-left">
+        <div class="brand-logo">
+            <i class="fas fa-university"></i>
+        </div>
+        <div class="brand-name">BOITE‑VIRO</div>
+        <div class="yellow-bar"></div>
+        <p class="brand-desc">
+            Plateforme professionnelle de gestion<br>
+            des virements bancaires internationaux
+        </p>
+
+        <div class="banks-title">Établissements partenaires</div>
+        <div class="banks-grid">
+            <div class="bank-item">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/BNP_Paribas_logo.svg/320px-BNP_Paribas_logo.svg.png" alt="BNP Paribas">
+            </div>
+            <div class="bank-item">
+                <img src="https://upload.wikimedia.org/wikipedia/fr/thumb/0/0e/Cr%C3%A9dit_Agricole_logo.svg/320px-Cr%C3%A9dit_Agricole_logo.svg.png" alt="Crédit Agricole">
+            </div>
+            <div class="bank-item">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Soci%C3%A9t%C3%A9_G%C3%A9n%C3%A9rale_logo.svg/320px-Soci%C3%A9t%C3%A9_G%C3%A9n%C3%A9rale_logo.svg.png" alt="Société Générale">
+            </div>
+            <div class="bank-item">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/HSBC_logo_%282018%29.svg/320px-HSBC_logo_%282018%29.svg.png" alt="HSBC">
+            </div>
+            <div class="bank-item">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Deutsche_Bank_logo.svg/320px-Deutsche_Bank_logo.svg.png" alt="Deutsche Bank">
+            </div>
+            <div class="bank-item">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/ING_Group_logo.svg/320px-ING_Group_logo.svg.png" alt="ING Bank">
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap 5 JS -->
+    <!-- ═══════════════════════ RIGHT PANEL ═══════════════════════ -->
+    <div class="panel-right" style="position:relative;">
+        <div class="form-wrap">
+            <div class="login-title">Bienvenue</div>
+            <div class="login-sub">Connectez-vous à votre espace sécurisé</div>
+
+            {% if form.errors %}
+            <div class="alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                Identifiants incorrects. Veuillez réessayer.
+            </div>
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <label class="field-label" for="id_username">Nom d'utilisateur</label>
+                <div class="field-wrap">
+                    <span class="field-icon"><i class="fas fa-user"></i></span>
+                    <input class="field-input" type="text" id="id_username" name="username"
+                           placeholder="votre identifiant" required autofocus>
+                </div>
+
+                <label class="field-label" for="id_password">Mot de passe</label>
+                <div class="field-wrap">
+                    <span class="field-icon"><i class="fas fa-lock"></i></span>
+                    <input class="field-input" type="password" id="id_password" name="password"
+                           placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-sign-in-alt" style="margin-right:0.5rem;"></i>Se connecter
+                </button>
+            </form>
+
+            <div class="secure-note">
+                <i class="fas fa-shield-alt"></i>
+                Connexion sécurisée — Données chiffrées
+            </div>
+
+            <div style="margin-top:1.5rem; font-size:0.8rem; color:#9aa0ac; text-align:center;">
+                Pas de compte ? Contactez l'administrateur.
+            </div>
+        </div>
+
+        <div class="footer-note">
+            &copy; 2025 BOITE-VIRO — Tous droits réservés
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
