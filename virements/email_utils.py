@@ -12,18 +12,19 @@ def get_bank_info(banque_code):
     Retourner les informations de la banque (logo URL, couleurs, slogan, etc.)
     Les logos doivent être des URLs publiques pour garantir l'affichage dans les emails
     """
+    BASE = 'https://www.virement.net/media/logos'
     bank_info = {
         'bnp_paribas': {
             'name': 'BNP PARIBAS',
-            'logo_url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/BNP_Paribas_logo.svg/320px-BNP_Paribas_logo.svg.png',
-            'primary_color': '#009652',  # Vert BNP
+            'logo_url': f'{BASE}/bnp_paribas.png',
+            'primary_color': '#009652',
             'secondary_color': '#0066CC',
             'slogan': "La banque d'un monde qui change",
             'text_color': '#FFFFFF',
         },
         'credit_agricole': {
             'name': 'CRÉDIT AGRICOLE',
-            'logo_url': 'https://upload.wikimedia.org/wikipedia/fr/thumb/0/0e/Cr%C3%A9dit_Agricole_logo.svg/320px-Cr%C3%A9dit_Agricole_logo.svg.png',
+            'logo_url': f'{BASE}/credit_agricole.png',
             'primary_color': '#009682',
             'secondary_color': '#0066CC',
             'slogan': "La banque qui a du sens",
@@ -31,23 +32,23 @@ def get_bank_info(banque_code):
         },
         'bnp_paribas_fortis': {
             'name': 'BNP PARIBAS FORTIS',
-            'logo_url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/BNP_Paribas_logo.svg/320px-BNP_Paribas_logo.svg.png',
-            'primary_color': '#0064B4',  # Bleu officiel BNP Paribas Fortis
+            'logo_url': f'{BASE}/bnp_paribas_fortis.png',
+            'primary_color': '#0064B4',
             'secondary_color': '#004D8A',
             'slogan': "La banque d'un monde qui change",
             'text_color': '#FFFFFF',
         },
         'credit_mutuel': {
             'name': 'CRÉDIT MUTUEL',
-            'logo_url': 'https://upload.wikimedia.org/wikipedia/fr/thumb/4/4a/Cr%C3%A9dit_Mutuel_logo.svg/320px-Cr%C3%A9dit_Mutuel_logo.svg.png',
-            'primary_color': '#0050A0',  # Bleu officiel Crédit Mutuel
+            'logo_url': f'{BASE}/credit_mutuel.png',
+            'primary_color': '#0050A0',
             'secondary_color': '#003D7D',
             'slogan': "La banque qui vous ressemble",
             'text_color': '#FFFFFF',
         },
         'credit_suisse': {
             'name': 'CREDIT SUISSE',
-            'logo_url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Credit_Suisse_Logo.svg/320px-Credit_Suisse_Logo.svg.png',
+            'logo_url': f'{BASE}/credit_suisse.png',
             'primary_color': '#C8102E',  # Rouge officiel Credit Suisse
             'secondary_color': '#A00D24',
             'slogan': "Banking on Switzerland",
@@ -55,90 +56,89 @@ def get_bank_info(banque_code):
         },
         'credit_lyonnais': {
             'name': 'CRÉDIT LYONNAIS',
-            'logo_url': 'https://upload.wikimedia.org/wikipedia/fr/thumb/5/5a/Cr%C3%A9dit_Lyonnais_logo.svg/320px-Cr%C3%A9dit_Lyonnais_logo.svg.png',
-            'primary_color': '#003C78',  # Bleu officiel Crédit Lyonnais (LCL)
+            'logo_url': f'{BASE}/credit_lyonnais.png',
+            'primary_color': '#003C78',
             'secondary_color': '#002D5A',
             'slogan': "LCL, la banque qui vous ressemble",
             'text_color': '#FFFFFF',
         },
         'banque_populaire': {
             'name': 'BANQUE POPULAIRE',
-            'logo_url': 'https://upload.wikimedia.org/wikipedia/fr/thumb/8/8e/Banque_Populaire_logo.svg/320px-Banque_Populaire_logo.svg.png',
-            'primary_color': '#C83232',  # Rouge officiel Banque Populaire
+            'logo_url': f'{BASE}/banque_populaire.png',
+            'primary_color': '#C83232',
             'secondary_color': '#A02828',
             'slogan': "La banque coopérative",
             'text_color': '#FFFFFF',
         },
         'societe_generale': {
             'name': 'SOCIÉTÉ GÉNÉRALE',
-            'logo_url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Soci%C3%A9t%C3%A9_G%C3%A9n%C3%A9rale_logo.svg/320px-Soci%C3%A9t%C3%A9_G%C3%A9n%C3%A9rale_logo.svg.png',
-            'primary_color': '#C80000',  # Rouge officiel Société Générale
+            'logo_url': f'{BASE}/societe_generale.png',
+            'primary_color': '#C80000',
             'secondary_color': '#A00000',
             'slogan': "La banque qui vous accompagne",
             'text_color': '#FFFFFF',
         },
         'intesa_sanpaolo': {
             'name': 'INTESA SANPAOLO',
-            'logo_url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Intesa_Sanpaolo_logo.svg/320px-Intesa_Sanpaolo_logo.svg.png',
-            'primary_color': '#003D82',  # Bleu officiel Intesa Sanpaolo
+            'logo_url': f'{BASE}/intesa_sanpaolo.png',
+            'primary_color': '#003D82',
             'secondary_color': '#002D5F',
             'slogan': "La banca che ti ascolta",
             'text_color': '#FFFFFF',
         },
         'deutsche_bank': {
             'name': 'DEUTSCHE BANK',
-            'logo_url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Deutsche_Bank_logo.svg/320px-Deutsche_Bank_logo.svg.png',
-            'primary_color': '#0018A8',  # Bleu officiel Deutsche Bank
+            'logo_url': f'{BASE}/deutsche_bank.png',
+            'primary_color': '#0018A8',
             'secondary_color': '#001066',
             'slogan': "Die Bank für ein Deutschland, das Chancen ergreift",
             'text_color': '#FFFFFF',
         },
         'hsbc': {
             'name': 'HSBC',
-            'logo_url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/HSBC_logo_%282018%29.svg/320px-HSBC_logo_%282018%29.svg.png',
-            'primary_color': '#DB0011',  # Rouge officiel HSBC
+            'logo_url': f'{BASE}/hsbc.png',
+            'primary_color': '#DB0011',
             'secondary_color': '#B0000E',
             'slogan': "The world's local bank",
             'text_color': '#FFFFFF',
         },
         'barclays': {
             'name': 'BARCLAYS',
-            'logo_url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Barclays_Bank_logo.svg/320px-Barclays_Bank_logo.svg.png',
-            'primary_color': '#00AEEF',  # Bleu officiel Barclays
+            'logo_url': f'{BASE}/barclays.png',
+            'primary_color': '#00AEEF',
             'secondary_color': '#0088CC',
             'slogan': "Now there's a thought",
             'text_color': '#FFFFFF',
         },
         'citibank': {
             'name': 'CITIBANK',
-            'logo_url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Citibank.svg/320px-Citibank.svg.png',
-            'primary_color': '#1B4F9B',  # Bleu officiel Citibank
+            'logo_url': f'{BASE}/citibank.png',
+            'primary_color': '#1B4F9B',
             'secondary_color': '#0F3A6B',
             'slogan': "Citi never sleeps",
             'text_color': '#FFFFFF',
         },
         'ubs': {
             'name': 'UBS',
-            'logo_url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/UBS_logo.svg/320px-UBS_logo.svg.png',
-            'primary_color': '#E0001B',  # Rouge officiel UBS
+            'logo_url': f'{BASE}/ubs.png',
+            'primary_color': '#E0001B',
             'secondary_color': '#B00015',
             'slogan': "Wealth management and Swiss banking",
             'text_color': '#FFFFFF',
         },
         'ing_bank': {
             'name': 'ING BANK',
-            'logo_url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/ING_Group_logo.svg/320px-ING_Group_logo.svg.png',
-            'primary_color': '#FF6200',  # Orange officiel ING
+            'logo_url': f'{BASE}/ing_bank.png',
+            'primary_color': '#FF6200',
             'secondary_color': '#CC4E00',
             'slogan': "Do your thing",
             'text_color': '#FFFFFF',
         },
     }
-    
-    # Retourner les infos de la banque ou des valeurs par défaut
+
     return bank_info.get(banque_code, {
         'name': banque_code.upper().replace('_', ' '),
-        'logo_url': 'https://via.placeholder.com/200x60/0066CC/FFFFFF?text=BANK',
+        'logo_url': f'{BASE}/default.png',
         'primary_color': '#0066CC',
         'secondary_color': '#0056B3',
         'slogan': 'Banking services',
