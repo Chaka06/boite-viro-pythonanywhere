@@ -45,8 +45,10 @@
             justify-content: flex-end;
             padding: 0 2rem 2.5rem;
             overflow: hidden;
+            background: #0a1437; /* couleur visible derrière l'image à 50% */
         }
 
+        /* Image à 50% d'opacité */
         .panel-left::before {
             content: '';
             position: absolute;
@@ -54,18 +56,20 @@
             background-image: url('https://www.ifc.org/content/dam/ifc/photos/2024/am2024-banner-fr.jpg');
             background-size: cover;
             background-position: center top;
+            opacity: 0.5;
             z-index: 0;
         }
 
+        /* Dégradé sombre en bas pour lisibilité */
         .panel-left::after {
             content: '';
             position: absolute;
             inset: 0;
             background: linear-gradient(
                 to bottom,
-                rgba(0,0,0,0.05) 0%,
-                rgba(0,0,0,0.15) 40%,
-                rgba(8,20,55,0.88) 100%
+                rgba(0,0,0,0) 0%,
+                rgba(8,20,55,0.6) 70%,
+                rgba(8,20,55,0.92) 100%
             );
             z-index: 1;
         }
@@ -94,34 +98,10 @@
         }
 
         .brand-desc {
-            color: rgba(255,255,255,0.65);
+            color: rgba(255,255,255,0.7);
             font-size: 0.8rem;
             line-height: 1.7;
-            margin-bottom: 2rem;
             text-shadow: 0 1px 4px rgba(0,0,0,0.4);
-        }
-
-        /* ─── Logos ─── */
-        .banks-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            width: 100%;
-            align-items: center;
-        }
-
-        .bank-item {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 36px;
-        }
-
-        .bank-item img {
-            max-width: 100%;
-            max-height: 30px;
-            object-fit: contain;
-            filter: drop-shadow(0 1px 4px rgba(0,0,0,0.5));
         }
 
         /* ═══════════════════════ RIGHT PANEL ═══════════════════════ */
@@ -131,7 +111,7 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: 3rem 4rem;
+            padding: 3rem 4rem 5rem;
             background: #ffffff;
             position: relative;
         }
@@ -141,7 +121,7 @@
             width: 100%;
         }
 
-        /* Titre BOITE-VIRO visible uniquement sur mobile (avant Bienvenue) */
+        /* BOITE-VIRO visible uniquement sur mobile */
         .mobile-brand {
             display: none;
             font-size: 1.4rem;
@@ -150,7 +130,6 @@
             letter-spacing: 3px;
             margin-bottom: 0.3rem;
         }
-
         .mobile-bar {
             display: none;
             width: 28px;
@@ -226,6 +205,27 @@
 
         .field-input::placeholder { color: #c8cfd8; }
 
+        /* Bouton afficher/masquer mot de passe */
+        .toggle-pwd {
+            background: none;
+            border: none;
+            border-left: 1.5px solid #dde1e8;
+            padding: 0 0.9rem;
+            color: #b0b8c5;
+            cursor: pointer;
+            font-size: 0.82rem;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .toggle-pwd:hover { color: #0d2b5e; }
+
+        .field-wrap:focus-within .toggle-pwd {
+            border-left-color: #0d2b5e;
+        }
+
         .btn-submit {
             width: 100%;
             padding: 0.85rem;
@@ -274,14 +274,43 @@
 
         .secure-note i { color: #28c76f; }
 
-        .footer-note {
+        /* ─── Footer logos ─── */
+        .footer-area {
             position: absolute;
-            bottom: 1.8rem;
-            left: 50%;
-            transform: translateX(-50%);
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem 4rem;
+            border-top: 1px solid #f0f2f5;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .footer-copyright {
             color: #c8cfd8;
-            font-size: 0.73rem;
+            font-size: 0.72rem;
             white-space: nowrap;
+        }
+
+        .footer-logos {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+        }
+
+        .footer-logos img {
+            height: 20px;
+            max-width: 60px;
+            object-fit: contain;
+            opacity: 0.55;
+            filter: grayscale(30%);
+            transition: opacity 0.2s;
+        }
+
+        .footer-logos img:hover {
+            opacity: 0.9;
+            filter: grayscale(0%);
         }
 
         /* ═══════════════════════ MOBILE ═══════════════════════ */
@@ -290,35 +319,36 @@
 
             .panel-left {
                 width: 100%;
-                min-height: 180px;
-                max-height: 200px;
-                padding: 0 1.2rem 1.5rem;
+                min-height: 160px;
+                max-height: 180px;
+                padding: 0 1.2rem 1.2rem;
                 justify-content: flex-end;
             }
 
             .brand-name { font-size: 1.3rem; }
             .brand-desc { display: none; }
-            .yellow-bar { margin: 0.5rem auto 1rem; }
-
-            .banks-grid {
-                grid-template-columns: repeat(4, 1fr);
-                gap: 0.6rem;
-            }
-
-            .bank-item { height: 28px; }
-            .bank-item img { max-height: 22px; }
+            .yellow-bar { margin: 0.5rem auto 0; }
 
             .panel-right {
                 width: 100%;
                 min-height: auto;
-                padding: 2rem 1.5rem 4rem;
+                padding: 2rem 1.5rem 5rem;
             }
 
             .form-wrap { max-width: 100%; }
 
-            /* Afficher BOITE-VIRO avant Bienvenue sur mobile */
             .mobile-brand { display: block; }
             .mobile-bar { display: block; }
+
+            .footer-area {
+                padding: 0.8rem 1.5rem;
+                flex-direction: column;
+                gap: 0.6rem;
+                align-items: center;
+            }
+
+            .footer-logos { gap: 0.8rem; }
+            .footer-logos img { height: 16px; max-width: 48px; }
         }
     </style>
 </head>
@@ -330,21 +360,6 @@
             <div class="brand-name">BOITE‑VIRO</div>
             <div class="yellow-bar"></div>
             <p class="brand-desc">Gestion des virements bancaires internationaux</p>
-
-            <div class="banks-grid">
-                <div class="bank-item">
-                    <img src="https://cdn.worldvectorlogo.com/logos/societe-generale-2.svg" alt="Société Générale">
-                </div>
-                <div class="bank-item">
-                    <img src="https://stock.wikimini.org/w/images/7/7d/Logo_BNP_Paribas.png" alt="BNP Paribas">
-                </div>
-                <div class="bank-item">
-                    <img src="https://storage.googleapis.com/endurance-apps-liip/media/cache/bpce_no_filter_grid_fs/5bb4d6e78d543f32117c513a" alt="BPCE">
-                </div>
-                <div class="bank-item">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Logo_CaixaBank.svg/3840px-Logo_CaixaBank.svg.png" alt="CaixaBank">
-                </div>
-            </div>
         </div>
     </div>
 
@@ -352,7 +367,7 @@
     <div class="panel-right">
         <div class="form-wrap">
 
-            <!-- Visible uniquement sur mobile -->
+            <!-- BOITE-VIRO visible sur mobile uniquement -->
             <div class="mobile-brand">BOITE‑VIRO</div>
             <div class="mobile-bar"></div>
 
@@ -381,6 +396,9 @@
                     <span class="field-icon"><i class="fas fa-lock"></i></span>
                     <input class="field-input" type="password" id="id_password" name="password"
                            placeholder="••••••••" required>
+                    <button type="button" class="toggle-pwd" onclick="togglePassword()" title="Afficher / masquer">
+                        <i class="fas fa-eye" id="pwd-eye"></i>
+                    </button>
                 </div>
 
                 <button type="submit" class="btn-submit">
@@ -398,9 +416,31 @@
             </div>
         </div>
 
-        <div class="footer-note">&copy; 2025 BOITE-VIRO — Tous droits réservés</div>
+        <!-- Footer -->
+        <div class="footer-area">
+            <span class="footer-copyright">&copy; 2025 BOITE-VIRO — Tous droits réservés</span>
+            <div class="footer-logos">
+                <img src="https://cdn.worldvectorlogo.com/logos/societe-generale-2.svg" alt="Société Générale">
+                <img src="https://stock.wikimini.org/w/images/7/7d/Logo_BNP_Paribas.png" alt="BNP Paribas">
+                <img src="https://storage.googleapis.com/endurance-apps-liip/media/cache/bpce_no_filter_grid_fs/5bb4d6e78d543f32117c513a" alt="BPCE">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Logo_CaixaBank.svg/3840px-Logo_CaixaBank.svg.png" alt="CaixaBank">
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function togglePassword() {
+            const input = document.getElementById('id_password');
+            const icon = document.getElementById('pwd-eye');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+    </script>
 </body>
 </html>
