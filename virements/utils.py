@@ -504,7 +504,13 @@ class BankCanvas(canvas.Canvas):
         self.langue     = kwargs.pop('langue',     'fr')
         super().__init__(*args, **kwargs)
 
-    # ── Appelé par doc.build via onFirstPage / onLaterPages ──────────
+    def showPage(self):
+        """Dessine header/footer sur chaque page avant de la valider."""
+        self._draw_header()
+        self._draw_footer()
+        super().showPage()
+
+    # ── Appelé par showPage ───────────────────────────────────────────
     def draw_page_decorations(self):
         self._draw_header()
         self._draw_footer()
@@ -588,10 +594,6 @@ class BankCanvas(canvas.Canvas):
         self.setFillColor(C_DARK)
         self.drawRightString(PAGE_W - MR, 24,
                              f"{t['page']} {self._pageNumber}")
-
-
-def _decorate(canv, doc):
-    canv.draw_page_decorations()
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -807,7 +809,7 @@ def generer_pdf_initiation(virement):
     ]))
     story.append(sig_tbl)
 
-    doc.build(story, onFirstPage=_decorate, onLaterPages=_decorate)
+    doc.build(story)
     return f'pdfs/initiations/{filename}'
 
 
@@ -937,5 +939,5 @@ def generer_pdf_rejet(rejet):
     ]))
     story.append(sig_tbl)
 
-    doc.build(story, onFirstPage=_decorate, onLaterPages=_decorate)
+    doc.build(story)
     return f'pdfs/rejets/{filename}'
