@@ -575,12 +575,14 @@ def envoyer_email_initiation(virement):
         
         # Envoyer l'email
         email.send()
-        
+
         return True
-        
+
     except Exception as e:
-        print(f"Erreur lors de l'envoi de l'email d'initiation: {e}")
-        return False
+        import logging
+        logger = logging.getLogger('virements')
+        logger.error(f"Erreur envoi email initiation (bénéficiaire={virement.beneficiaire_email}): {type(e).__name__}: {e}")
+        raise
 
 
 def envoyer_email_rejet(virement, rejet):
@@ -632,10 +634,12 @@ def envoyer_email_rejet(virement, rejet):
         
         # Envoyer l'email
         email.send()
-        
+
         return True
-        
+
     except Exception as e:
-        print(f"Erreur lors de l'envoi de l'email de rejet: {e}")
-        return False
+        import logging
+        logger = logging.getLogger('virements')
+        logger.error(f"Erreur envoi email rejet (bénéficiaire={virement.beneficiaire_email}): {type(e).__name__}: {e}")
+        raise
 
