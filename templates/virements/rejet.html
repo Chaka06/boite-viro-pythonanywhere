@@ -113,7 +113,7 @@
                                <a href="{% url 'virements:historique' %}" class="btn btn-outline-secondary me-md-2">
                                    <i class="fas fa-times me-2"></i>Annuler
                                </a>
-                               <button type="submit" class="btn btn-warning">
+                               <button type="button" class="btn btn-warning" id="btnConfirmerRejet">
                                    <i class="fas fa-times-circle me-2"></i>Confirmer le rejet
                                </button>
                            </div>
@@ -124,33 +124,78 @@
        </div>
    </div>
 </div>
+<!-- Modale de confirmation -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-warning text-dark border-0">
+                <h5 class="modal-title fw-bold" id="confirmModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmer le rejet
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-4">
+                <p class="mb-0">Êtes-vous sûr de vouloir rejeter ce virement ? <strong>Cette action est irréversible.</strong></p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Annuler
+                </button>
+                <button type="button" class="btn btn-warning fw-bold" id="btnValiderRejet">
+                    <i class="fas fa-check me-1"></i>Oui, rejeter
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modale de chargement -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-body text-center py-5 px-4">
+                <div class="spinner-border text-warning mb-4" style="width:3.5rem;height:3.5rem;" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+                <h5 class="fw-bold mb-2">Traitement en cours…</h5>
+                <p class="text-muted mb-0">Génération du PDF et envoi de l'email de rejet.<br>Veuillez patienter.</p>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-   const form = document.getElementById('rejetForm');
-   
-   form.addEventListener('submit', function(e) {
-       const motif = document.getElementById('{{ form.motif_rejet.id_for_label }}').value.trim();
-       const frais = document.getElementById('{{ form.frais_redirection.id_for_label }}').value;
-       
-       if (!motif || motif.length < 10) {
-           e.preventDefault();
-           alert('Le motif du rejet doit contenir au moins 10 caractères.');
-           return;
-       }
-       
-       if (!frais || parseFloat(frais) < 0) {
-           e.preventDefault();
-           alert('Veuillez saisir un montant de frais valide.');
-           return;
-       }
-       
-       if (!confirm('Êtes-vous sûr de vouloir rejeter ce virement ? Cette action est irréversible.')) {
-           e.preventDefault();
-       }
-   });
+    const form = document.getElementById('rejetForm');
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+
+    // Clic sur "Confirmer le rejet" → ouvrir modale de confirmation
+    document.getElementById('btnConfirmerRejet').addEventListener('click', function() {
+        const motif = document.getElementById('{{ form.motif_rejet.id_for_label }}').value.trim();
+        const frais = document.getElementById('{{ form.frais_redirection.id_for_label }}').value;
+
+        if (!motif || motif.length < 10) {
+            alert('Le motif du rejet doit contenir au moins 10 caractères.');
+            return;
+        }
+        if (!frais || parseFloat(frais) < 0) {
+            alert('Veuillez saisir un montant de frais valide.');
+            return;
+        }
+        confirmModal.show();
+    });
+
+    // Clic sur "Oui, rejeter" → fermer confirm, afficher chargement, soumettre
+    document.getElementById('btnValiderRejet').addEventListener('click', function() {
+        confirmModal.hide();
+        document.getElementById('confirmModal').addEventListener('hidden.bs.modal', function() {
+            loadingModal.show();
+            form.submit();
+        }, { once: true });
+    });
 });
 </script>
 {% endblock %}

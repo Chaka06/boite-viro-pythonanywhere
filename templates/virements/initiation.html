@@ -207,20 +207,33 @@
         </div>
     </div>
 </div>
+<!-- Modale de chargement -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-body text-center py-5 px-4">
+                <div class="spinner-border text-primary mb-4" style="width:3.5rem;height:3.5rem;" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+                <h5 class="fw-bold mb-2">Traitement en cours…</h5>
+                <p class="text-muted mb-0">Génération du PDF et envoi de l'email de confirmation.<br>Veuillez patienter.</p>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Validation côté client
     const form = document.getElementById('initiationForm');
-    
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+
     form.addEventListener('submit', function(e) {
-        // Validation basique
         const requiredFields = form.querySelectorAll('[required]');
         let isValid = true;
-        
-        requiredFields.forEach(field => {
+
+        requiredFields.forEach(function(field) {
             if (!field.value.trim()) {
                 isValid = false;
                 field.classList.add('is-invalid');
@@ -228,11 +241,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 field.classList.remove('is-invalid');
             }
         });
-        
+
         if (!isValid) {
             e.preventDefault();
             alert('Veuillez remplir tous les champs obligatoires.');
+            return;
         }
+
+        // Formulaire valide → afficher la modale puis laisser soumettre
+        loadingModal.show();
     });
 });
 </script>

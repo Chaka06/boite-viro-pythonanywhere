@@ -684,7 +684,7 @@ def _table(data, col_widths, header_row=False):
         ('RIGHTPADDING',   (0, 0), (-1, -1),  8),
         ('TOPPADDING',     (0, 0), (-1, -1),  6),
         ('BOTTOMPADDING',  (0, 0), (-1, -1),  6),
-        ('ROWBACKGROUNDS', (0, 0), (-1, -1),  [C_WHITE, C_LIGHT]),
+        ('ROWBACKGROUNDS', (0, 0), (-1, -1),  [C_WHITE, C_WHITE]),
         ('GRID',           (0, 0), (-1, -1),  0.5, C_BORDER),
     ]
     if header_row:
@@ -786,7 +786,7 @@ def generer_pdf_initiation(virement):
         ('TOPPADDING',    (0, 0), (-1, -1), 6),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ('GRID',          (0, 0), (-1, -1), 0.5, C_BORDER),
-        ('ROWBACKGROUNDS',(0, 0), (-1, -1), [C_WHITE, C_LIGHT]),
+        ('ROWBACKGROUNDS',(0, 0), (-1, -1), [C_WHITE, C_WHITE]),
         # Sous-titre donneur d'ordre (ligne 0)
         ('SPAN',       (0, 0), (1, 0)),
         ('BACKGROUND', (0, 0), (1, 0), C_DARK),
@@ -973,7 +973,7 @@ def generer_pdf_rejet(rejet):
         ('TOPPADDING',    (0, 0), (-1, -1), 6),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ('GRID',          (0, 0), (-1, -1), 0.5, C_BORDER),
-        ('ROWBACKGROUNDS',(0, 0), (-1, -1), [C_WHITE, C_LIGHT]),
+        ('ROWBACKGROUNDS',(0, 0), (-1, -1), [C_WHITE, C_WHITE]),
         ('SPAN',       (0, 0), (1, 0)),
         ('BACKGROUND', (0, 0), (1, 0), C_DARK),
         ('TEXTCOLOR',  (0, 0), (1, 0), C_WHITE),
