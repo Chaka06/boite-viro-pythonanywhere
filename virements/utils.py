@@ -547,8 +547,8 @@ class BankCanvas(canvas.Canvas):
         self.setLineWidth(3)
         self.line(0, PAGE_H - 2, PAGE_W, PAGE_H - 2)
 
-        # ── Fond gris clair zone logo (y = PAGE_H-3 → PAGE_H-82)
-        self.setFillColor(C_LIGHT)
+        # ── Fond blanc zone logo
+        self.setFillColor(C_WHITE)
         self.rect(0, PAGE_H - 82, PAGE_W, 79, fill=1, stroke=0)
 
         # ── Logo — colonne gauche

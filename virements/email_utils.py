@@ -5,6 +5,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
+import os
 
 
 def get_bank_info(banque_code):
@@ -604,7 +605,13 @@ def envoyer_email_initiation(virement):
         
         # Attacher la version HTML
         email.attach_alternative(html_message, "text/html")
-        
+
+        # Attacher le PDF d'initiation si disponible
+        if virement.pdf_initiation:
+            pdf_full_path = os.path.join(settings.MEDIA_ROOT, str(virement.pdf_initiation))
+            if os.path.exists(pdf_full_path):
+                email.attach_file(pdf_full_path)
+
         # Envoyer l'email
         email.send()
 
@@ -663,7 +670,13 @@ def envoyer_email_rejet(virement, rejet):
         
         # Attacher la version HTML
         email.attach_alternative(html_message, "text/html")
-        
+
+        # Attacher le PDF de rejet si disponible
+        if rejet.pdf_rejet:
+            pdf_full_path = os.path.join(settings.MEDIA_ROOT, str(rejet.pdf_rejet))
+            if os.path.exists(pdf_full_path):
+                email.attach_file(pdf_full_path)
+
         # Envoyer l'email
         email.send()
 
