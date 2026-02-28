@@ -841,44 +841,6 @@ def generer_pdf_initiation(virement):
         ('LINEBELOW',      (0, 0), (-1, 0),  0.4, C_BORDER),
     ]))
     story.append(tbl_amount)
-    story.append(Spacer(1, 14))
-
-    # ── Section 4 : Signatures ─────────────────────────────────────
-    story.append(_section_title(t['signature_cachet']))
-
-    sig_label_style = ParagraphStyle(
-        '_SL', fontName=FONT, fontSize=8,
-        textColor=C_MED, leading=11,
-    )
-    sig_line_style = ParagraphStyle(
-        '_SLN', fontName=FONT, fontSize=9,
-        textColor=C_LIGHT, leading=20,
-    )
-    half_sig = CW / 2 - 3
-
-    def sig_cell(label):
-        return [
-            Paragraph(label, sig_label_style),
-            Spacer(1, 22),
-            Paragraph('_' * 42, sig_line_style),
-        ]
-
-    sig_tbl = Table(
-        [[sig_cell(t['donneur_ordre_label']),
-          sig_cell(t['visa_banque'])]],
-        colWidths=[half_sig, half_sig],
-    )
-    sig_tbl.setStyle(TableStyle([
-        ('VALIGN',        (0, 0), (-1, -1), 'TOP'),
-        ('LEFTPADDING',   (0, 0), (-1, -1), 10),
-        ('RIGHTPADDING',  (0, 0), (-1, -1), 10),
-        ('TOPPADDING',    (0, 0), (-1, -1), 8),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ('BOX',           (0, 0), (-1, -1), 0.5, C_BORDER),
-        ('LINEBEFORE',    (1, 0), (1, -1),  0.5, C_BORDER),
-        ('BACKGROUND',    (0, 0), (-1, -1), C_WHITE),
-    ]))
-    story.append(sig_tbl)
 
     doc.build(story, canvasmaker=make_canvas)
     return f'pdfs/initiations/{filename}'
@@ -1005,44 +967,6 @@ def generer_pdf_rejet(rejet):
         ],
         col_widths=[LW, VW],
     ))
-    story.append(Spacer(1, 14))
-
-    # ── Section 5 : Signatures ────────────────────────────────────
-    story.append(_section_title(t['signature_cachet']))
-
-    sig_label_style = ParagraphStyle(
-        '_SL2', fontName=FONT, fontSize=8,
-        textColor=C_MED, leading=11,
-    )
-    sig_line_style = ParagraphStyle(
-        '_SLN2', fontName=FONT, fontSize=9,
-        textColor=C_LIGHT, leading=20,
-    )
-    half_sig = CW / 2 - 3
-
-    def sig_cell(label):
-        return [
-            Paragraph(label, sig_label_style),
-            Spacer(1, 22),
-            Paragraph('_' * 42, sig_line_style),
-        ]
-
-    sig_tbl = Table(
-        [[sig_cell(t['donneur_ordre_label']),
-          sig_cell(t['visa_banque'])]],
-        colWidths=[half_sig, half_sig],
-    )
-    sig_tbl.setStyle(TableStyle([
-        ('VALIGN',        (0, 0), (-1, -1), 'TOP'),
-        ('LEFTPADDING',   (0, 0), (-1, -1), 10),
-        ('RIGHTPADDING',  (0, 0), (-1, -1), 10),
-        ('TOPPADDING',    (0, 0), (-1, -1), 8),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ('BOX',           (0, 0), (-1, -1), 0.5, C_BORDER),
-        ('LINEBEFORE',    (1, 0), (1, -1),  0.5, C_BORDER),
-        ('BACKGROUND',    (0, 0), (-1, -1), C_WHITE),
-    ]))
-    story.append(sig_tbl)
 
     doc.build(story, canvasmaker=make_canvas)
     return f'pdfs/rejets/{filename}'
