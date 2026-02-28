@@ -608,8 +608,8 @@ class BankCanvas(canvas.Canvas):
 
         self.setFont(FONT, 6.5)
         self.setFillColor(C_MED)
-        self.drawCentredText(PAGE_W / 2, 47, t['document_confidentiel'])
-        self.drawCentredText(PAGE_W / 2, 37, t['reproduction_interdite'])
+        self.drawCentredString(PAGE_W / 2, 47, t['document_confidentiel'])
+        self.drawCentredString(PAGE_W / 2, 37, t['reproduction_interdite'])
 
         gen = datetime.now().strftime('%d/%m/%Y %H:%M')
         self.drawString(ML, 24, f"{t['document_genere']} {gen}")
