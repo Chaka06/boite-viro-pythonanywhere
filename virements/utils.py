@@ -835,7 +835,7 @@ def generer_pdf_initiation(virement):
     ]))
     story.append(sig_tbl)
 
-    doc.build(story)
+    doc.build(story, canvasmaker=make_canvas)
     return f'pdfs/initiations/{filename}'
 
 
@@ -967,5 +967,5 @@ def generer_pdf_rejet(rejet):
     ]))
     story.append(sig_tbl)
 
-    doc.build(story)
+    doc.build(story, canvasmaker=make_canvas)
     return f'pdfs/rejets/{filename}'
