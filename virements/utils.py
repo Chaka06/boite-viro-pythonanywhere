@@ -740,50 +740,72 @@ def generer_pdf_initiation(virement):
     except Exception:
         montant_lettres = ''
 
+    LW = int(CW * 0.42)   # colonne labels
+    VW = CW - LW           # colonne valeurs
+
     story = []
 
-    # ── Section 1 : Établissement & référence ─────────────────────
+    # ── Section 1 : Établissement & référence (2 colonnes) ────────
     story.append(_section_title(t['details_operation']))
     story.append(_table(
         [
-            [_p(t['banque'] + ' :', bold=True), _p(bank_info['name']),
-             _p(t['reference'] + ' :', bold=True), _p(ref)],
-            [_p(t['date'] + ' :', bold=True),
-             _p(virement.date_creation.strftime('%d/%m/%Y — %H:%M')),
-             _p(t['statut'] + ' :', bold=True),
-             _p(t['statut_traitement'])],
+            [_p(t['banque']    + ' :', bold=True), _p(bank_info['name'])],
+            [_p(t['reference'] + ' :', bold=True), _p(ref)],
+            [_p(t['date']      + ' :', bold=True),
+             _p(virement.date_creation.strftime('%d/%m/%Y — %H:%M'))],
+            [_p(t['statut']    + ' :', bold=True), _p(t['statut_traitement'])],
         ],
-        col_widths=[105, 155, 105, CW - 365],
+        col_widths=[LW, VW],
     ))
     story.append(Spacer(1, 10))
 
-    # ── Section 2 : Parties ────────────────────────────────────────
+    # ── Section 2 : Parties (label | valeur avec sous-titres SPAN) ─
     story.append(_section_title(t['informations_parties']))
 
-    half = CW / 2 - 3
-    parties = _table(
-        [
-            # En-têtes
-            [_p(t['donneur_ordre'], bold=True, color=C_WHITE),
-             _p(t['beneficiaire'],  bold=True, color=C_WHITE)],
-            # Noms
-            [_p(virement.donneur_ordre_nom_complet, bold=True),
-             _p(virement.beneficiaire_nom_complet,  bold=True)],
-            # Comptes
-            [_p(t['compte'] + ' :'),
-             _p(t['compte'] + ' :')],
-            [_p(virement.donneur_ordre_compte, size=8.5),
-             _p(virement.beneficiaire_compte,  size=8.5)],
-            # BIC / Email
-            [_p(t['email'] + ' :'),
-             _p(t['bic']   + ' :')],
-            [_p(virement.beneficiaire_email, size=8.5),
-             _p(virement.numero_bic,         size=8.5)],
-        ],
-        col_widths=[half, half],
-        header_row=True,
-    )
-    story.append(parties)
+    parties_data = [
+        # Sous-titre DONNEUR D'ORDRE (span)
+        [_p(t['donneur_ordre'], bold=True, color=C_WHITE), ''],
+        [_p(t['compte']  + ' :', bold=True), _p(virement.donneur_ordre_nom_complet)],
+        [_p('N° compte :', bold=True),        _p(virement.donneur_ordre_compte)],
+        # Sous-titre BÉNÉFICIAIRE (span)
+        [_p(t['beneficiaire'], bold=True, color=C_WHITE), ''],
+        [_p(t['compte']  + ' :', bold=True), _p(virement.beneficiaire_nom_complet)],
+        [_p('IBAN :', bold=True),             _p(virement.beneficiaire_compte)],
+        [_p(t['email']   + ' :', bold=True), _p(virement.beneficiaire_email)],
+        [_p(t['bic']     + ' :', bold=True), _p(virement.numero_bic)],
+    ]
+    parties_tbl = Table(parties_data, colWidths=[LW, VW])
+    parties_tbl.setStyle(TableStyle([
+        ('FONTNAME',      (0, 0), (-1, -1), FONT),
+        ('FONTSIZE',      (0, 0), (-1, -1), 9),
+        ('TEXTCOLOR',     (0, 0), (-1, -1), C_BLACK),
+        ('ALIGN',         (0, 0), (-1, -1), 'LEFT'),
+        ('VALIGN',        (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING',   (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING',  (0, 0), (-1, -1), 8),
+        ('TOPPADDING',    (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('GRID',          (0, 0), (-1, -1), 0.5, C_BORDER),
+        ('ROWBACKGROUNDS',(0, 0), (-1, -1), [C_WHITE, C_LIGHT]),
+        # Sous-titre donneur d'ordre (ligne 0)
+        ('SPAN',       (0, 0), (1, 0)),
+        ('BACKGROUND', (0, 0), (1, 0), C_DARK),
+        ('TEXTCOLOR',  (0, 0), (1, 0), C_WHITE),
+        ('FONTNAME',   (0, 0), (1, 0), FONT_BOLD),
+        ('FONTSIZE',   (0, 0), (1, 0), 8.5),
+        # Sous-titre bénéficiaire (ligne 3)
+        ('SPAN',       (0, 3), (1, 3)),
+        ('BACKGROUND', (0, 3), (1, 3), C_DARK),
+        ('TEXTCOLOR',  (0, 3), (1, 3), C_WHITE),
+        ('FONTNAME',   (0, 3), (1, 3), FONT_BOLD),
+        ('FONTSIZE',   (0, 3), (1, 3), 8.5),
+        # Labels (col 0, sauf sous-titres) en gris gras
+        ('TEXTCOLOR',  (0, 1), (0, 2), C_MED),
+        ('FONTNAME',   (0, 1), (0, 2), FONT_BOLD),
+        ('TEXTCOLOR',  (0, 4), (0, -1), C_MED),
+        ('FONTNAME',   (0, 4), (0, -1), FONT_BOLD),
+    ]))
+    story.append(parties_tbl)
     story.append(Spacer(1, 10))
 
     # ── Section 3 : Montant ────────────────────────────────────────
@@ -898,20 +920,22 @@ def generer_pdf_rejet(rejet):
         canvasmaker=make_canvas,
     )
 
+    LW = int(CW * 0.42)
+    VW = CW - LW
+
     story = []
 
-    # ── Section 1 : Références ─────────────────────────────────────
+    # ── Section 1 : Références (2 colonnes) ───────────────────────
     story.append(_section_title(t['details_operation']))
     story.append(_table(
         [
-            [_p(t['banque']      + ' :', bold=True), _p(bank_info['name']),
-             _p(t['reference']   + ' :', bold=True), _p(ref)],
-            [_p(t['date_rejet']  + ' :', bold=True),
-             _p(rejet.date_rejet.strftime('%d/%m/%Y — %H:%M')),
-             _p(t['statut']      + ' :', bold=True),
-             _p(t['rejete'], bold=True)],
+            [_p(t['banque']     + ' :', bold=True), _p(bank_info['name'])],
+            [_p(t['reference']  + ' :', bold=True), _p(ref)],
+            [_p(t['date_rejet'] + ' :', bold=True),
+             _p(rejet.date_rejet.strftime('%d/%m/%Y — %H:%M'))],
+            [_p(t['statut']     + ' :', bold=True), _p(t['rejete'], bold=True)],
         ],
-        col_widths=[105, 155, 105, CW - 365],
+        col_widths=[LW, VW],
     ))
     story.append(Spacer(1, 10))
 
@@ -923,19 +947,49 @@ def generer_pdf_rejet(rejet):
     ))
     story.append(Spacer(1, 10))
 
-    # ── Section 3 : Détails du rejet ──────────────────────────────
+    # ── Section 3 : Parties (label | valeur avec sous-titres SPAN) ─
     story.append(_section_title(t['informations_parties']))
-    story.append(_table(
-        [
-            [_p(t['beneficiaire_concerne'] + ' :', bold=True),
-             _p(virement.beneficiaire_nom_complet, bold=True)],
-            [_p(t['compte_beneficiaire']   + ' :', bold=True),
-             _p(virement.beneficiaire_compte)],
-            [_p(t['donneur_ordre']         + ' :', bold=True),
-             _p(virement.donneur_ordre_nom_complet)],
-        ],
-        col_widths=[5.5*cm, CW - 5.5*cm],
-    ))
+
+    parties_rej_data = [
+        # Sous-titre DONNEUR D'ORDRE
+        [_p(t['donneur_ordre'], bold=True, color=C_WHITE), ''],
+        [_p(t['compte'] + ' :', bold=True), _p(virement.donneur_ordre_nom_complet)],
+        [_p('N° compte :', bold=True),       _p(virement.donneur_ordre_compte)],
+        # Sous-titre BÉNÉFICIAIRE
+        [_p(t['beneficiaire'], bold=True, color=C_WHITE), ''],
+        [_p(t['compte'] + ' :', bold=True), _p(virement.beneficiaire_nom_complet)],
+        [_p('IBAN :', bold=True),            _p(virement.beneficiaire_compte)],
+        [_p(t['email'] + ' :', bold=True),  _p(virement.beneficiaire_email)],
+    ]
+    parties_rej_tbl = Table(parties_rej_data, colWidths=[LW, VW])
+    parties_rej_tbl.setStyle(TableStyle([
+        ('FONTNAME',      (0, 0), (-1, -1), FONT),
+        ('FONTSIZE',      (0, 0), (-1, -1), 9),
+        ('TEXTCOLOR',     (0, 0), (-1, -1), C_BLACK),
+        ('ALIGN',         (0, 0), (-1, -1), 'LEFT'),
+        ('VALIGN',        (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING',   (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING',  (0, 0), (-1, -1), 8),
+        ('TOPPADDING',    (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('GRID',          (0, 0), (-1, -1), 0.5, C_BORDER),
+        ('ROWBACKGROUNDS',(0, 0), (-1, -1), [C_WHITE, C_LIGHT]),
+        ('SPAN',       (0, 0), (1, 0)),
+        ('BACKGROUND', (0, 0), (1, 0), C_DARK),
+        ('TEXTCOLOR',  (0, 0), (1, 0), C_WHITE),
+        ('FONTNAME',   (0, 0), (1, 0), FONT_BOLD),
+        ('FONTSIZE',   (0, 0), (1, 0), 8.5),
+        ('SPAN',       (0, 3), (1, 3)),
+        ('BACKGROUND', (0, 3), (1, 3), C_DARK),
+        ('TEXTCOLOR',  (0, 3), (1, 3), C_WHITE),
+        ('FONTNAME',   (0, 3), (1, 3), FONT_BOLD),
+        ('FONTSIZE',   (0, 3), (1, 3), 8.5),
+        ('TEXTCOLOR',  (0, 1), (0, 2), C_MED),
+        ('FONTNAME',   (0, 1), (0, 2), FONT_BOLD),
+        ('TEXTCOLOR',  (0, 4), (0, -1), C_MED),
+        ('FONTNAME',   (0, 4), (0, -1), FONT_BOLD),
+    ]))
+    story.append(parties_rej_tbl)
     story.append(Spacer(1, 10))
 
     # ── Section 4 : Montant & frais ───────────────────────────────
@@ -949,7 +1003,7 @@ def generer_pdf_rejet(rejet):
             [_p(t['motif']           + ' :', bold=True),
              _p(rejet.motif_rejet)],
         ],
-        col_widths=[5.5*cm, CW - 5.5*cm],
+        col_widths=[LW, VW],
     ))
     story.append(Spacer(1, 14))
 
