@@ -5,10 +5,12 @@ from reportlab.lib.units import cm
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from django.conf import settings
 from datetime import datetime
+from io import BytesIO
 import os
 from .email_utils import get_bank_info
 
@@ -464,6 +466,25 @@ def get_logo_path(banque_code):
     return path if os.path.exists(path) else None
 
 
+def _load_logo(logo_path):
+    """
+    Charge un logo PNG avec PIL, composite sur fond blanc, et retourne
+    un ImageReader ReportLab. Évite le rendu noir des PNG avec alpha.
+    """
+    try:
+        from PIL import Image
+        img = Image.open(logo_path).convert('RGBA')
+        bg = Image.new('RGBA', img.size, (255, 255, 255, 255))
+        bg.paste(img, mask=img.split()[3])
+        img_rgb = bg.convert('RGB')
+        buf = BytesIO()
+        img_rgb.save(buf, format='PNG')
+        buf.seek(0)
+        return ImageReader(buf)
+    except Exception:
+        return None
+
+
 def register_unicode_fonts():
     font_paths = [
         '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
@@ -537,15 +558,17 @@ class BankCanvas(canvas.Canvas):
         LOGO_H = 52
         logo_drawn = False
         if self.logo_path and os.path.exists(self.logo_path):
-            try:
-                self.drawImage(
-                    self.logo_path, LOGO_X, LOGO_Y,
-                    width=LOGO_W, height=LOGO_H,
-                    preserveAspectRatio=True,
-                )
-                logo_drawn = True
-            except Exception:
-                pass
+            reader = _load_logo(self.logo_path)
+            if reader:
+                try:
+                    self.drawImage(
+                        reader, LOGO_X, LOGO_Y,
+                        width=LOGO_W, height=LOGO_H,
+                        preserveAspectRatio=True,
+                    )
+                    logo_drawn = True
+                except Exception:
+                    pass
         if not logo_drawn:
             # Fallback : nom de la banque en texte
             self.setFillColor(C_DARK)
@@ -730,7 +753,7 @@ def generer_pdf_initiation(virement):
              _p(t['statut'] + ' :', bold=True),
              _p(t['statut_traitement'])],
         ],
-        col_widths=[3.8*cm, 6.5*cm, 3.8*cm, 5.4*cm],
+        col_widths=[105, 155, 105, CW - 365],
     ))
     story.append(Spacer(1, 10))
 
@@ -888,7 +911,7 @@ def generer_pdf_rejet(rejet):
              _p(t['statut']      + ' :', bold=True),
              _p(t['rejete'], bold=True)],
         ],
-        col_widths=[3.8*cm, 6.5*cm, 3.8*cm, 5.4*cm],
+        col_widths=[105, 155, 105, CW - 365],
     ))
     story.append(Spacer(1, 10))
 
