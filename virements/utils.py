@@ -485,30 +485,98 @@ def _load_logo(logo_path):
         return None
 
 
+_FONT_REGISTRY = {}   # {'latin': ('Unicode','Unicode-Bold'), 'arabic': (...), 'cjk': (...)}
+
+
 def register_unicode_fonts():
-    font_paths = [
-        '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
-        '/System/Library/Fonts/Supplemental/Arial Unicode.ttf',
-        '/Library/Fonts/Arial Unicode.ttf',
+    """
+    Enregistre une police par groupe de scripts :
+      - latin  : Latin + Cyrillique  (fr, en, es, it, de, pl, pt, ru)
+      - arabic : Arabe               (ar)
+      - cjk    : Chinois simplifié   (zh)
+    Cherche d'abord dans BASE_DIR/fonts/, puis dans les chemins système.
+    """
+    FONTS_DIR = os.path.join(settings.BASE_DIR, 'fonts')
+
+    # ── Latin / Cyrillique ────────────────────────────────────────────
+    latin_candidates = [
+        (os.path.join(FONTS_DIR, 'NotoSans-Regular.ttf'),
+         os.path.join(FONTS_DIR, 'NotoSans-Bold.ttf')),
+        ('/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf',
+         '/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf'),
+        ('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+         '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'),
+        ('/System/Library/Fonts/Supplemental/Arial Unicode.ttf', None),
+        ('/Library/Fonts/Arial Unicode.ttf', None),
     ]
-    for fp in font_paths:
-        if os.path.exists(fp):
+    for reg_path, bold_path in latin_candidates:
+        if os.path.exists(reg_path):
             try:
-                pdfmetrics.registerFont(TTFont('DejaVu', fp))
-                bold_fp = fp.replace('Sans.ttf', 'Sans-Bold.ttf')
-                if os.path.exists(bold_fp):
-                    pdfmetrics.registerFont(TTFont('DejaVu-Bold', bold_fp))
-                else:
-                    pdfmetrics.registerFont(TTFont('DejaVu-Bold', fp))
-                return True
+                pdfmetrics.registerFont(TTFont('Unicode', reg_path))
+                bp = bold_path if bold_path and os.path.exists(bold_path) else reg_path
+                pdfmetrics.registerFont(TTFont('Unicode-Bold', bp))
+                _FONT_REGISTRY['latin'] = ('Unicode', 'Unicode-Bold')
+                break
             except Exception:
                 continue
-    return False
+
+    # ── Arabe ─────────────────────────────────────────────────────────
+    arabic_candidates = [
+        (os.path.join(FONTS_DIR, 'NotoNaskhArabic-Regular.ttf'),
+         os.path.join(FONTS_DIR, 'NotoNaskhArabic-Bold.ttf')),
+        (os.path.join(FONTS_DIR, 'NotoSansArabic-Regular.ttf'),
+         os.path.join(FONTS_DIR, 'NotoSansArabic-Bold.ttf')),
+        ('/usr/share/fonts/truetype/noto/NotoNaskhArabic-Regular.ttf', None),
+        ('/usr/share/fonts/truetype/noto/NotoSansArabic-Regular.ttf', None),
+    ]
+    for reg_path, bold_path in arabic_candidates:
+        if os.path.exists(reg_path):
+            try:
+                pdfmetrics.registerFont(TTFont('Arabic', reg_path))
+                bp = bold_path if bold_path and os.path.exists(bold_path) else reg_path
+                pdfmetrics.registerFont(TTFont('Arabic-Bold', bp))
+                _FONT_REGISTRY['arabic'] = ('Arabic', 'Arabic-Bold')
+                break
+            except Exception:
+                continue
+
+    # ── CJK / Chinois ─────────────────────────────────────────────────
+    cjk_candidates = [
+        (os.path.join(FONTS_DIR, 'NotoSansSC-Regular.ttf'),
+         os.path.join(FONTS_DIR, 'NotoSansSC-Bold.ttf')),
+        (os.path.join(FONTS_DIR, 'NotoSansSC-Regular.otf'),
+         os.path.join(FONTS_DIR, 'NotoSansSC-Bold.otf')),
+        ('/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc', None),
+        ('/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc', None),
+    ]
+    for reg_path, bold_path in cjk_candidates:
+        if os.path.exists(reg_path):
+            try:
+                pdfmetrics.registerFont(TTFont('CJK', reg_path))
+                bp = bold_path if bold_path and os.path.exists(bold_path) else reg_path
+                pdfmetrics.registerFont(TTFont('CJK-Bold', bp))
+                _FONT_REGISTRY['cjk'] = ('CJK', 'CJK-Bold')
+                break
+            except Exception:
+                continue
+
+    return bool(_FONT_REGISTRY)
 
 
-_FONTS_OK  = register_unicode_fonts()
-FONT       = 'DejaVu'      if _FONTS_OK else 'Helvetica'
-FONT_BOLD  = 'DejaVu-Bold' if _FONTS_OK else 'Helvetica-Bold'
+def get_fonts_for_langue(langue):
+    """Retourne (font, font_bold) adapté à la langue donnée."""
+    if langue == 'ar' and 'arabic' in _FONT_REGISTRY:
+        return _FONT_REGISTRY['arabic']
+    if langue == 'zh' and 'cjk' in _FONT_REGISTRY:
+        return _FONT_REGISTRY['cjk']
+    if 'latin' in _FONT_REGISTRY:
+        return _FONT_REGISTRY['latin']
+    return ('Helvetica', 'Helvetica-Bold')
+
+
+register_unicode_fonts()
+# Polices par défaut (Latin) utilisées par les helpers globaux
+FONT, FONT_BOLD = get_fonts_for_langue('fr')
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -714,6 +782,10 @@ def generer_pdf_initiation(virement):
     ref       = str(virement.id)[:8].upper()
     date_str  = virement.date_creation.strftime('%d/%m/%Y')
 
+    # Sélectionner la police adaptée à la langue du document
+    global FONT, FONT_BOLD
+    FONT, FONT_BOLD = get_fonts_for_langue(virement.langue)
+
     def make_canvas(*args, **kwargs):
         return BankCanvas(
             *args, **kwargs,
@@ -863,6 +935,10 @@ def generer_pdf_rejet(rejet):
     t         = get_translations(virement.langue)
     ref       = str(virement.id)[:8].upper()
     date_str  = rejet.date_rejet.strftime('%d/%m/%Y')
+
+    # Sélectionner la police adaptée à la langue du document
+    global FONT, FONT_BOLD
+    FONT, FONT_BOLD = get_fonts_for_langue(virement.langue)
 
     def make_canvas(*args, **kwargs):
         return BankCanvas(
