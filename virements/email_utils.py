@@ -593,15 +593,14 @@ def envoyer_email_initiation(virement):
         # Créer le message email
         subject = f"{translations['subject_initiation']} - {context['banque_name']}"
         
-        # Utiliser l'expéditeur officiel du domaine pour garantir la délivrabilité
-        from_email = settings.DEFAULT_FROM_EMAIL
+        # Utiliser le nom de la banque comme expéditeur
+        from_email = f"{bank_info['name']} <{settings.EMAIL_HOST_USER}>"
 
         email = EmailMultiAlternatives(
             subject=subject,
             body=strip_tags(html_message),  # Version texte pour les clients qui ne supportent pas HTML
             from_email=from_email,
             to=[virement.beneficiaire_email],
-            reply_to=[settings.DEFAULT_FROM_EMAIL],
         )
         
         # Attacher la version HTML
@@ -659,15 +658,14 @@ def envoyer_email_rejet(virement, rejet):
         # Créer le message email
         subject = f"{translations['subject_rejet']} - {context['banque_name']}"
         
-        # Utiliser l'expéditeur officiel du domaine pour garantir la délivrabilité
-        from_email = settings.DEFAULT_FROM_EMAIL
+        # Utiliser le nom de la banque comme expéditeur
+        from_email = f"{bank_info['name']} <{settings.EMAIL_HOST_USER}>"
 
         email = EmailMultiAlternatives(
             subject=subject,
             body=strip_tags(html_message),  # Version texte
             from_email=from_email,
             to=[virement.beneficiaire_email],
-            reply_to=[settings.DEFAULT_FROM_EMAIL],
         )
         
         # Attacher la version HTML
