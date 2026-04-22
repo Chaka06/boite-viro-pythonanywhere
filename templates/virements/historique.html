@@ -97,7 +97,7 @@
                             <span class="fw-bold">{{ virement.montant_formate }}</span>
                         </td>
                         <td>
-                            <span class="badge bg-light text-dark">{{ virement.get_banque_emettrice_display }}</span>
+                            <span class="badge bg-light text-dark">{{ virement.banque_emettrice }}</span>
                         </td>
                         <td>
                             {% if virement.statut == 'initie' %}

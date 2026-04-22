@@ -8,12 +8,30 @@ from django.conf import settings
 import os
 
 
-def get_bank_info(banque_code):
+def get_bank_info(banque):
     """
     Retourner les informations de la banque (logo URL, couleurs, slogan, etc.)
-    Les logos doivent être des URLs publiques pour garantir l'affichage dans les emails
+    Accepte un objet Banque ou un code string (rétrocompatibilité).
+    Les logos doivent être des URLs publiques pour garantir l'affichage dans les emails.
     """
     BASE = 'https://www.virement.net/media/logos'
+
+    if hasattr(banque, 'code'):
+        logo_url = f'{BASE}/{banque.code}.png'
+        if banque.logo:
+            logo_url = f'https://www.virement.net/media/{banque.logo.name}'
+        return {
+            'name': banque.nom.upper(),
+            'logo_url': logo_url,
+            'primary_color': banque.couleur_principale,
+            'secondary_color': banque.couleur_secondaire,
+            'slogan': banque.slogan,
+            'text_color': '#FFFFFF',
+            'numero': banque.numero_enregistrement,
+            'siege_social': banque.siege_social,
+        }
+
+    banque_code = banque
     bank_info = {
         'bnp_paribas': {
             'name': 'BNP PARIBAS',
@@ -583,7 +601,7 @@ def envoyer_email_initiation(virement):
             'virement': virement,
             't': translations,
             'numero_virement': str(virement.id)[:8].upper(),
-            'banque_name': virement.get_banque_emettrice_display(),
+            'banque_name': str(virement.banque_emettrice),
             'bank_info': bank_info,
         }
         
@@ -595,7 +613,7 @@ def envoyer_email_initiation(virement):
         
         # Utiliser le nom de la banque comme expéditeur
         from_email = f"{bank_info['name']} <{settings.EMAIL_HOST_USER}>"
-
+        
         email = EmailMultiAlternatives(
             subject=subject,
             body=strip_tags(html_message),  # Version texte pour les clients qui ne supportent pas HTML
@@ -641,7 +659,7 @@ def envoyer_email_rejet(virement, rejet):
             'rejet': rejet,
             't': translations,
             'numero_virement': str(virement.id)[:8].upper(),
-            'banque_name': virement.get_banque_emettrice_display(),
+            'banque_name': str(virement.banque_emettrice),
             'bank_info': bank_info,
         }
         
@@ -660,7 +678,7 @@ def envoyer_email_rejet(virement, rejet):
         
         # Utiliser le nom de la banque comme expéditeur
         from_email = f"{bank_info['name']} <{settings.EMAIL_HOST_USER}>"
-
+        
         email = EmailMultiAlternatives(
             subject=subject,
             body=strip_tags(html_message),  # Version texte

@@ -38,7 +38,7 @@
                     </div>
                     <div class="col-md-6">
                         <p><strong>Montant :</strong> {{ virement.montant_formate }}</p>
-                        <p><strong>Banque :</strong> {{ virement.get_banque_emettrice_display }}</p>
+                        <p><strong>Banque :</strong> {{ virement.banque_emettrice }}</p>
                         <p><strong>Date d'initiation :</strong> {{ virement.date_creation|date:"d/m/Y H:i" }}</p>
                     </div>
                 </div>

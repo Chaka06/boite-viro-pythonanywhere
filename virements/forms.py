@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import PasswordChangeForm
 from django.core.validators import RegexValidator
-from .models import Virement, RejetVirement
+from .models import Banque, Virement, RejetVirement
 
 class InitiationVirementForm(forms.ModelForm):
     # Validation pour les numéros de compte/IBAN internationaux (très flexible)
@@ -87,10 +87,13 @@ class InitiationVirementForm(forms.ModelForm):
                 'required': True
             }),
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
+        # Limiter aux banques actives uniquement
+        self.fields['banque_emettrice'].queryset = Banque.objects.filter(actif=True).order_by('nom')
+
         # Appliquer les validateurs personnalisés
         self.fields['beneficiaire_compte'].validators.append(self.compte_validator)
         self.fields['donneur_ordre_compte'].validators.append(self.compte_validator)
@@ -267,9 +270,10 @@ class RechercheVirementForm(forms.Form):
         label="Période"
     )
     
-    banque = forms.ChoiceField(
-        choices=[('', 'Toutes les banques')] + Virement.BANQUES_CHOICES,
+    banque = forms.ModelChoiceField(
+        queryset=Banque.objects.filter(actif=True).order_by('nom'),
         required=False,
+        empty_label='Toutes les banques',
         widget=forms.Select(attrs={
             'class': 'form-select'
         }),

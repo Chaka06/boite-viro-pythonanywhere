@@ -1,7 +1,41 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from .models import ProfilUtilisateur, Virement, RejetVirement
+from django.utils.html import format_html
+from .models import Banque, ProfilUtilisateur, Virement, RejetVirement
+
+
+@admin.register(Banque)
+class BanqueAdmin(admin.ModelAdmin):
+    list_display = ('nom', 'code', 'apercu_logo', 'couleur_principale', 'actif')
+    list_filter = ('actif',)
+    search_fields = ('nom', 'code')
+    prepopulated_fields = {'code': ('nom',)}
+    readonly_fields = ('apercu_logo',)
+
+    fieldsets = (
+        ('Identité', {
+            'fields': ('nom', 'code', 'actif')
+        }),
+        ('Logo', {
+            'fields': ('logo', 'apercu_logo')
+        }),
+        ('Apparence (emails & PDFs)', {
+            'fields': ('couleur_principale', 'couleur_secondaire', 'slogan')
+        }),
+        ('Informations légales', {
+            'fields': ('numero_enregistrement', 'siege_social')
+        }),
+    )
+
+    def apercu_logo(self, obj):
+        if obj.logo:
+            return format_html(
+                '<img src="{}" style="max-height:50px; max-width:150px; object-fit:contain;" />',
+                obj.logo.url
+            )
+        return "Aucun logo"
+    apercu_logo.short_description = "Aperçu"
 
 class ProfilUtilisateurInline(admin.StackedInline):
     model = ProfilUtilisateur

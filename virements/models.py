@@ -4,6 +4,27 @@ from django.core.validators import MinValueValidator
 from decimal import Decimal
 import uuid
 
+
+class Banque(models.Model):
+    nom = models.CharField(max_length=100, verbose_name="Nom de la banque")
+    code = models.SlugField(max_length=50, unique=True, verbose_name="Code unique")
+    logo = models.ImageField(upload_to='logos/', blank=True, null=True, verbose_name="Logo")
+    couleur_principale = models.CharField(max_length=7, default='#0066CC', verbose_name="Couleur principale")
+    couleur_secondaire = models.CharField(max_length=7, default='#0056B3', verbose_name="Couleur secondaire")
+    slogan = models.CharField(max_length=200, blank=True, verbose_name="Slogan")
+    numero_enregistrement = models.CharField(max_length=100, blank=True, verbose_name="Numéro d'enregistrement")
+    siege_social = models.CharField(max_length=200, blank=True, verbose_name="Siège social")
+    actif = models.BooleanField(default=True, verbose_name="Banque active")
+
+    class Meta:
+        verbose_name = "Banque"
+        verbose_name_plural = "Banques"
+        ordering = ['nom']
+
+    def __str__(self):
+        return self.nom
+
+
 class ProfilUtilisateur(models.Model):
     TYPE_COMPTE_CHOICES = [
         ('standard', 'Standard (40 virements)'),
@@ -53,24 +74,6 @@ class Virement(models.Model):
         ('zh', '中文'),
     ]
     
-    BANQUES_CHOICES = [
-        ('bnp_paribas', 'BNP Paribas'),
-        ('credit_agricole', 'Crédit Agricole'),
-        ('bnp_paribas_fortis', 'BNP Paribas Fortis'),
-        ('credit_mutuel', 'Crédit Mutuel'),
-        ('credit_suisse', 'Crédit Suisse'),
-        ('credit_lyonnais', 'Crédit Lyonnais'),
-        ('banque_populaire', 'Banque Populaire'),
-        ('societe_generale', 'Société Générale'),
-        ('intesa_sanpaolo', 'Intesa Sanpaolo'),
-        ('deutsche_bank', 'Deutsche Bank'),
-        ('hsbc', 'HSBC'),
-        ('barclays', 'Barclays'),
-        ('citibank', 'Citibank'),
-        ('ubs', 'UBS'),
-        ('ing_bank', 'ING Bank'),
-    ]
-    
     DEVISES_CHOICES = [
         ('EUR', 'Euro (EUR)'),
         ('USD', 'Dollar américain (USD)'),
@@ -116,7 +119,12 @@ class Virement(models.Model):
     
     # Configuration
     langue = models.CharField(max_length=2, choices=LANGUES_CHOICES, default='fr')
-    banque_emettrice = models.CharField(max_length=50, choices=BANQUES_CHOICES)
+    banque_emettrice = models.ForeignKey(
+        Banque,
+        on_delete=models.PROTECT,
+        verbose_name="Banque émettrice",
+        related_name='virements',
+    )
     
     # Fichiers générés
     pdf_initiation = models.FileField(upload_to='pdfs/initiations/', blank=True, null=True)
