@@ -72,6 +72,7 @@ class Virement(models.Model):
         ('pt', 'Português'),
         ('ar', 'العربية'),
         ('zh', '中文'),
+        ('nl', 'Nederlands'),
     ]
     
     DEVISES_CHOICES = [
