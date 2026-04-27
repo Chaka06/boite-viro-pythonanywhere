@@ -173,6 +173,18 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <div class="form-floating">
+                                {{ form.fuseau_horaire }}
+                                <label for="{{ form.fuseau_horaire.id_for_label }}">{{ form.fuseau_horaire.label }}</label>
+                            </div>
+                            {% if form.fuseau_horaire.errors %}
+                                <div class="text-danger small">{{ form.fuseau_horaire.errors.0 }}</div>
+                            {% endif %}
+                            {% if form.fuseau_horaire.help_text %}
+                                <div class="form-text">{{ form.fuseau_horaire.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
                                 {{ form.banque_emettrice }}
                                 <label for="{{ form.banque_emettrice.id_for_label }}">{{ form.banque_emettrice.label }}</label>
                             </div>

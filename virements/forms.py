@@ -22,7 +22,7 @@ class InitiationVirementForm(forms.ModelForm):
             'beneficiaire_nom', 'beneficiaire_prenom', 'beneficiaire_email',
             'beneficiaire_compte', 'numero_bic', 'montant', 'devise',
             'donneur_ordre_nom', 'donneur_ordre_prenom', 'donneur_ordre_compte',
-            'langue', 'banque_emettrice'
+            'langue', 'fuseau_horaire', 'banque_emettrice'
         ]
         
         widgets = {
@@ -82,6 +82,10 @@ class InitiationVirementForm(forms.ModelForm):
                 'class': 'form-select',
                 'required': True
             }),
+            'fuseau_horaire': forms.Select(attrs={
+                'class': 'form-select',
+                'required': True
+            }),
             'banque_emettrice': forms.Select(attrs={
                 'class': 'form-select',
                 'required': True
@@ -111,6 +115,7 @@ class InitiationVirementForm(forms.ModelForm):
         self.fields['donneur_ordre_prenom'].label = "Prénom du donneur d'ordre *"
         self.fields['donneur_ordre_compte'].label = "Numéro de compte / IBAN donneur d'ordre *"
         self.fields['langue'].label = "Langue du document *"
+        self.fields['fuseau_horaire'].label = "Fuseau horaire *"
         self.fields['banque_emettrice'].label = "Banque émettrice *"
         
         # Textes d'aide
@@ -119,6 +124,7 @@ class InitiationVirementForm(forms.ModelForm):
         self.fields['numero_bic'].help_text = "Code BIC/SWIFT de n'importe quelle banque mondiale (8 ou 11 caractères)"
         self.fields['montant'].help_text = "Montant en décimales (ex: 1250.75) - Aucune limite de montant"
         self.fields['langue'].help_text = "Langue utilisée pour l'email et le PDF"
+        self.fields['fuseau_horaire'].help_text = "Fuseau horaire affiché dans le document (ex : Europe/Paris pour la France)"
         
     def clean_numero_bic(self):
         """Nettoyer et valider le code BIC"""

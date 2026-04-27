@@ -10,6 +10,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from django.conf import settings
 from datetime import datetime
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from io import BytesIO
 import os
 from .email_utils import get_bank_info
@@ -450,6 +451,18 @@ def get_translations(langue):
 # ─────────────────────────────────────────────────────────────────────
 # Utilitaires
 # ─────────────────────────────────────────────────────────────────────
+def localiser_date(dt, fuseau_horaire='UTC'):
+    """Convertit un datetime UTC vers le fuseau horaire demandé."""
+    try:
+        tz = ZoneInfo(fuseau_horaire or 'UTC')
+    except (ZoneInfoNotFoundError, Exception):
+        tz = ZoneInfo('UTC')
+    if dt.tzinfo is None:
+        from django.utils import timezone as dj_tz
+        dt = dj_tz.make_aware(dt, ZoneInfo('UTC'))
+    return dt.astimezone(tz)
+
+
 def number_to_words(number, langue='fr'):
     try:
         from num2words import num2words
@@ -719,7 +732,9 @@ def generer_pdf_initiation(virement):
     logo_path = get_logo_path(virement.banque_emettrice)
     t         = get_translations(virement.langue)
     ref       = str(virement.id)[:8].upper()
-    date_str  = virement.date_creation.strftime('%d/%m/%Y')
+    tz_name   = getattr(virement, 'fuseau_horaire', 'UTC') or 'UTC'
+    date_local = localiser_date(virement.date_creation, tz_name)
+    date_str  = date_local.strftime('%d/%m/%Y')
 
     def make_canvas(*args, **kwargs):
         return BankCanvas(
@@ -759,7 +774,7 @@ def generer_pdf_initiation(virement):
             [_p(t['banque']    + ' :', bold=True), _p(bank_info['name'])],
             [_p(t['reference'] + ' :', bold=True), _p(ref)],
             [_p(t['date']      + ' :', bold=True),
-             _p(virement.date_creation.strftime('%d/%m/%Y — %H:%M'))],
+             _p(date_local.strftime('%d/%m/%Y — %H:%M') + f'  ({tz_name})')],
             [_p(t['statut']    + ' :', bold=True), _p(t['statut_traitement'])],
         ],
         col_widths=[LW, VW],
@@ -869,7 +884,9 @@ def generer_pdf_rejet(rejet):
     logo_path = get_logo_path(virement.banque_emettrice)
     t         = get_translations(virement.langue)
     ref       = str(virement.id)[:8].upper()
-    date_str  = rejet.date_rejet.strftime('%d/%m/%Y')
+    tz_name   = getattr(virement, 'fuseau_horaire', 'UTC') or 'UTC'
+    date_rejet_local = localiser_date(rejet.date_rejet, tz_name)
+    date_str  = date_rejet_local.strftime('%d/%m/%Y')
 
     def make_canvas(*args, **kwargs):
         return BankCanvas(
@@ -901,7 +918,7 @@ def generer_pdf_rejet(rejet):
             [_p(t['banque']     + ' :', bold=True), _p(bank_info['name'])],
             [_p(t['reference']  + ' :', bold=True), _p(ref)],
             [_p(t['date_rejet'] + ' :', bold=True),
-             _p(rejet.date_rejet.strftime('%d/%m/%Y — %H:%M'))],
+             _p(date_rejet_local.strftime('%d/%m/%Y — %H:%M') + f'  ({tz_name})')],
             [_p(t['statut']     + ' :', bold=True), _p(t['rejete'], bold=True)],
         ],
         col_widths=[LW, VW],
